@@ -1,8 +1,8 @@
--- Roblox Advanced Skin Copier
+-- Ultimate Roblox Skin & Animation Copier (Fully Fixed)
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- إزالة الواجهة القديمة إن وجدت
+-- إزالة الواجهة القديمة
 if LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("SkinCopierGui") then
     LocalPlayer.PlayerGui.SkinCopierGui:Destroy()
 end
@@ -17,7 +17,7 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
 MainFrame.Size = UDim2.new(0, 260, 0, 160)
 MainFrame.Position = UDim2.new(0.5, -130, 0.4, -80)
-MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
@@ -30,16 +30,16 @@ UICorner.Parent = MainFrame
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 35)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "ناسخ السكنات (المطور)"
+TitleLabel.Text = "ناسخ السكنات (نسخة خالية من الأخطاء) 🔥"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 16
+TitleLabel.TextSize = 13
 TitleLabel.Font = Enum.Font.SourceSansBold
 TitleLabel.Parent = MainFrame
 
 local UsernameInput = Instance.new("TextBox")
 UsernameInput.Size = UDim2.new(0.85, 0, 0, 35)
 UsernameInput.Position = UDim2.new(0.075, 0, 0.28, 0)
-UsernameInput.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+UsernameInput.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
 UsernameInput.TextColor3 = Color3.fromRGB(255, 255, 255)
 UsernameInput.PlaceholderText = "اكتب اليوزر هنا..."
 UsernameInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
@@ -57,8 +57,8 @@ CopyButton.Size = UDim2.new(0.85, 0, 0, 35)
 CopyButton.Position = UDim2.new(0.075, 0, 0.60, 0)
 CopyButton.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
 CopyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CopyButton.Text = "نسخ السكن"
-CopyButton.TextSize = 15
+CopyButton.Text = "نسخ السكن والحركات"
+CopyButton.TextSize = 14
 CopyButton.Font = Enum.Font.SourceSansBold
 CopyButton.Parent = MainFrame
 
@@ -66,69 +66,82 @@ local ButtonCorner = Instance.new("UICorner")
 ButtonCorner.CornerRadius = UDim.new(0, 6)
 ButtonCorner.Parent = CopyButton
 
--- دالة النسخ القوية (تشتغل على R6 و R15)
+-- دالة النسخ الكاملة الشاملة
 local function copySkin()
-    local targetUsername = UsernameInput.Text
-    if targetUsername == "" or targetUsername == " " then 
+    local targetUsername = string.gsub(UsernameInput.Text, "%s+", "")
+    if targetUsername == "" then 
         CopyButton.Text = "اكتب اسم اليوزر أولاً!"
         task.wait(1.5)
-        CopyButton.Text = "نسخ السكن"
+        CopyButton.Text = "نسخ السكن والحركات"
         return 
     end
 
     CopyButton.Text = "جاري النسخ..."
 
-    local success, targetUserId = pcall(function()
-        return Players:GetUserIdFromNameAsync(targetUsername)
-    end)
+    task.spawn(function()
+        local success, targetUserId = pcall(function()
+            return Players:GetUserIdFromNameAsync(targetUsername)
+        end)
 
-    if success and targetUserId then
-        local myCharacter = LocalPlayer.Character
-        if myCharacter then
-            -- جلب موديل الشخصية المطلوبة
-            local modelSuccess, model = pcall(function()
-                return Players:CreateHumanoidModelFromUserId(targetUserId)
-            end)
+        if success and targetUserId then
+            local myCharacter = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local myHumanoid = myCharacter:FindFirstChildOfClass("Humanoid")
 
-            if modelSuccess and model then
-                -- مسح الملابس والإكسسوارات القديمة لشخصيتك
-                for _, item in pairs(myCharacter:GetChildren()) do
-                    if item:IsA("Accessory") or item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("BodyColors") then
-                        item:Destroy()
+            if myCharacter and myHumanoid then
+                -- جلب وصف الشخصية المعتمد
+                local descSuccess, humanoidDesc = pcall(function()
+                    return Players:GetHumanoidDescriptionFromUserId(targetUserId)
+                end)
+
+                if descSuccess and humanoidDesc then
+                    -- 1. تنظيف ملابس وإكسسوارات الشخصية القديمة
+                    for _, item in pairs(myCharacter:GetChildren()) do
+                        if item:IsA("Accessory") or item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("BodyColors") or item:IsA("CharacterMesh") then
+                            item:Destroy()
+                        end
                     end
-                end
 
-                -- نقل الملابس والإكسسوارات من الشخصية المطلوبة إليك
-                for _, item in pairs(model:GetChildren()) do
-                    if item:IsA("Accessory") or item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("BodyColors") then
-                        item:Clone().Parent = myCharacter
-                    end
-                end
+                    -- 2. تطبيق المظهر والقياسات والحركات من الوصف المباشر
+                    pcall(function()
+                        myHumanoid:ApplyDescription(humanoidDesc)
+                    end)
 
-                -- نسخ شكل وجه الشخصية (Face)
-                local myHead = myCharacter:FindFirstChild("Head")
-                local targetHead = model:FindFirstChild("Head")
-                if myHead and targetHead then
-                    local targetFace = targetHead:FindFirstChildOfClass("Decal")
-                    if targetFace then
-                        local myFace = myHead:FindFirstChildOfClass("Decal")
-                        if myFace then myFace:Destroy() end
-                        targetFace:Clone().Parent = myHead
-                    end
-                end
+                    -- 3. معالجة إضافية للحجم الكبيرة والمجسمات العالية (Custom Model Check)
+                    pcall(function()
+                        local targetModel = Players:CreateHumanoidModelFromUserId(targetUserId)
+                        if targetModel then
+                            for _, part in pairs(targetModel:GetChildren()) do
+                                if part:IsA("CharacterMesh") or (part:IsA("Accessory") and not myCharacter:FindFirstChild(part.Name)) then
+                                    part:Clone().Parent = myCharacter
+                                end
+                            end
 
-                model:Destroy()
-                CopyButton.Text = "تم نسخ السكن بنجاح!"
-            else
-                CopyButton.Text = "فشل جلب بيانات اليوزر!"
+                            -- نسْخ وإعادة تنشيط الحركة
+                            local targetAnimate = targetModel:FindFirstChild("Animate")
+                            local myAnimate = myCharacter:FindFirstChild("Animate")
+                            if targetAnimate then
+                                if myAnimate then myAnimate:Destroy() end
+                                local clonedAnimate = targetAnimate:Clone()
+                                clonedAnimate.Parent = myCharacter
+                                clonedAnimate.Disabled = false
+                            end
+
+                            targetModel:Destroy()
+                        end
+                    end)
+
+                    CopyButton.Text = "تم النسخ بنجاح! ✨"
+                else
+                    CopyButton.Text = "فشل جلب بيانات السكن!"
+                end
             end
+        else
+            CopyButton.Text = "اليوزر غير صحيح!"
         end
-    else
-        CopyButton.Text = "اليوزر غير صحيح!"
-    end
 
-    task.wait(1.5)
-    CopyButton.Text = "نسخ السكن"
+        task.wait(2)
+        CopyButton.Text = "نسخ السكن والحركات"
+    end)
 end
 
 CopyButton.MouseButton1Click:Connect(copySkin)
