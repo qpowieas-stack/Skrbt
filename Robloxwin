@@ -1,4 +1,4 @@
--- Keyboard Simulator (World Selector & Teleport Farm)
+-- Keyboard Simulator Ultimate Fix (Godmode + World Trophies Farm)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -9,7 +9,7 @@ if LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("KeyboardFarmGui") then
     LocalPlayer.PlayerGui.KeyboardFarmGui:Destroy()
 end
 
-local SelectedWorld = "World3" -- الافتراضي العالم الأخير (1T)
+local SelectedWorld = "World3" -- الافتراضي العالم الثالث (1T)
 local FarmActive = false
 local InfJumpEnabled = false
 local NoclipEnabled = false
@@ -38,7 +38,7 @@ MainCorner.Parent = MainFrame
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 35)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "منقي ومختار عوالم الكيبورد ⌨️🎯"
+TitleLabel.Text = "سكربت الكيبورد المصلح والشامل ⌨️🔥"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 13
 TitleLabel.Font = Enum.Font.SourceSansBold
@@ -61,7 +61,7 @@ local function createButton(text, pos, color)
     return btn
 end
 
--- أزرار اختيار العالم والتحكم
+-- الأزرار
 local World1Btn = createButton("العالم الأول (150K): غير محدد ❌", UDim2.new(0.075, 0, 0.11, 0), Color3.fromRGB(70, 70, 80))
 local World2Btn = createButton("العالم الثاني (200M): غير محدد ❌", UDim2.new(0.075, 0, 0.22, 0), Color3.fromRGB(70, 70, 80))
 local World3Btn = createButton("العالم الثالث (1T): مفعل ✅", UDim2.new(0.075, 0, 0.33, 0), Color3.fromRGB(40, 180, 80))
@@ -92,7 +92,7 @@ ToggleBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- نظام اختيار العالم بدقة
+-- اختيار العوالم
 World1Btn.MouseButton1Click:Connect(function()
     SelectedWorld = "World1"
     World1Btn.Text = "العالم الأول (150K): مفعل ✅"
@@ -123,7 +123,6 @@ World3Btn.MouseButton1Click:Connect(function()
     World3Btn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
 end)
 
--- تشغيل/إيقاف الزراعة بالعالم المحدد
 ToggleFarmBtn.MouseButton1Click:Connect(function()
     FarmActive = not FarmActive
     if FarmActive then
@@ -135,7 +134,7 @@ ToggleFarmBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- تنفيذ الانتقال والتجميع حسب العالم المختار
+-- نظام تجميع الكؤوس الدقيق حسب العالم
 task.spawn(function()
     while true do
         if FarmActive then
@@ -143,32 +142,40 @@ task.spawn(function()
                 local char = LocalPlayer.Character
                 if char and char:FindFirstChild("HumanoidRootPart") then
                     local hrp = char.HumanoidRootPart
-                    local targetPortal = nil
+                    local targetPart = nil
+                    local validParts = {}
 
                     for _, v in pairs(workspace:GetDescendants()) do
                         if v:IsA("BasePart") or v:IsA("MeshPart") then
                             local name = v.Name:lower()
                             local parentName = v.Parent and v.Parent.Name:lower() or ""
-                            local fullName = name .. " " .. parentName
-
-                            -- تصفية استناداً إلى العالم المختار بدقة لتجنب بوابات الرجوع
-                            if not (fullName:find("checkpoint") or fullName:find("return") or fullName:find("spawn")) then
-                                if SelectedWorld == "World1" and (fullName:find("150k") or fullName:find("world1") or fullName:find("stage150")) then
-                                    targetPortal = v
-                                elseif SelectedWorld == "World2" and (fullName:find("200m") or fullName:find("world2") or fullName:find("stage200")) then
-                                    targetPortal = v
-                                elseif SelectedWorld == "World3" and (fullName:find("1t") or fullName:find("world3") or fullName:find("trillion") or fullName:find("final")) then
-                                    targetPortal = v
+                            
+                            if not (name:find("checkpoint") or name:find("return") or name:find("back") or name:find("spawn")) then
+                                if name:find("win") or name:find("end") or name:find("trophy") or name:find("finish") or parentName:find("win") then
+                                    table.insert(validParts, v)
                                 end
                             end
                         end
                     end
 
-                    -- إذا وجد البوابة الخاصة بالعالم المختار، ينتقل إليها مباشرة
-                    if targetPortal then
-                        hrp.CFrame = targetPortal.CFrame + Vector3.new(0, 3, 0)
-                        firetouchinterest(hrp, targetPortal, 0)
-                        firetouchinterest(hrp, targetPortal, 1)
+                    if #validParts > 0 then
+                        table.sort(validParts, function(a, b)
+                            return a.Position.Magnitude > b.Position.Magnitude
+                        end)
+
+                        if SelectedWorld == "World1" then
+                            targetPart = validParts[math.floor(#validParts * 0.7)] or validParts[1]
+                        elseif SelectedWorld == "World2" then
+                            targetPart = validParts[math.floor(#validParts * 0.4)] or validParts[1]
+                        elseif SelectedWorld == "World3" then
+                            targetPart = validParts[1] -- أقصى النهاية
+                        end
+                    end
+
+                    if targetPart then
+                        hrp.CFrame = targetPart.CFrame + Vector3.new(0, 3, 0)
+                        firetouchinterest(hrp, targetPart, 0)
+                        firetouchinterest(hrp, targetPart, 1)
                     end
                 end
             end)
@@ -188,7 +195,7 @@ Speed300Btn.MouseButton1Click:Connect(function()
     end
 end)
 
--- عدم الموت
+-- عدم الموت المصلح والقوي (Godmode Fixed)
 GodmodeBtn.MouseButton1Click:Connect(function()
     GodmodeEnabled = not GodmodeEnabled
     if GodmodeEnabled then
@@ -209,6 +216,8 @@ RunService.Stepped:Connect(function()
                 if hum then
                     hum.Health = hum.MaxHealth
                     hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+                    hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
                 end
             end
         end)
