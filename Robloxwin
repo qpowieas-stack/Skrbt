@@ -1,4 +1,4 @@
--- Keyboard Simulator (Ultra Clean Target 150K / 200M / 1T)
+-- Keyboard Simulator (Teleport & Touch Final Stage 150K / 200M / 1T)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -37,7 +37,7 @@ MainCorner.Parent = MainFrame
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 40)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "تجميع أقصى المراحل (150K/200M/1T) 🏆🔥"
+TitleLabel.Text = "تجميع أقصى المراحل (انتقال فوري) 🏆🔥"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 12
 TitleLabel.Font = Enum.Font.SourceSansBold
@@ -86,7 +86,7 @@ ToggleBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- 1. تجميع الفوز النهائي المستهدف (بدون أزرار التراجع)
+-- 1. نظام الانتقال الفوري الفعال لخط النهاية الأخير
 AutoWinBtn.MouseButton1Click:Connect(function()
     AutoWinEnabled = not AutoWinEnabled
     if AutoWinEnabled then
@@ -105,34 +105,36 @@ task.spawn(function()
                 local char = LocalPlayer.Character
                 if char and char:FindFirstChild("HumanoidRootPart") then
                     local hrp = char.HumanoidRootPart
-                    local targetPortals = {}
+                    local bestPortal = nil
+                    local maxZ = -999999
 
+                    -- البحث عن الجزء الأبعد في الماب (خط النهاية الحقيقي) وتجنب بوابات العودة
                     for _, v in pairs(workspace:GetDescendants()) do
                         if v:IsA("BasePart") or v:IsA("MeshPart") then
                             local strName = (v.Name .. " " .. (v.Parent and v.Parent.Name or "")):lower()
                             
-                            -- استثناء كل خيارات العودة والتلفيل والريسبون
-                            if not (strName:find("return") or strName:find("back") or strName:find("checkpoint") or strName:find("spawn") or strName:find("stage")) then
-                                if strName:find("150k") or strName:find("200m") or strName:find("1t") or strName:find("win") or strName:find("end") or strName:find("trophy") then
-                                    table.insert(targetPortals, v)
+                            if not (strName:find("return") or strName:find("back") or strName:find("checkpoint") or strName:find("spawn")) then
+                                if strName:find("win") or strName:find("end") or strName:find("trophy") or strName:find("150k") or strName:find("200m") or strName:find("1t") then
+                                    local posVal = math.abs(v.Position.X) + math.abs(v.Position.Z)
+                                    if posVal > maxZ then
+                                        maxZ = posVal
+                                        bestPortal = v
+                                    end
                                 end
                             end
                         end
                     end
 
-                    -- اختيار الهدف الأقصى فقط والتحقق منه
-                    if #targetPortals > 0 then
-                        local bestPortal = targetPortals[#targetPortals]
-                        if bestPortal and typeof(firetouchinterest) == "function" then
-                            firetouchinterest(hrp, bestPortal, 0)
-                            task.wait(0.05)
-                            firetouchinterest(hrp, bestPortal, 1)
-                        end
+                    -- الانتقال الفوري المباشر لجزء النهاية ثم لمسه
+                    if bestPortal then
+                        hrp.CFrame = bestPortal.CFrame + Vector3.new(0, 2, 0)
+                        firetouchinterest(hrp, bestPortal, 0)
+                        firetouchinterest(hrp, bestPortal, 1)
                     end
                 end
             end)
         end
-        task.wait(0.3)
+        task.wait(1.5) -- مهلة زمنية بسيطة بين كل انتقال لتجنب تعليق اللعبة
     end
 end)
 
