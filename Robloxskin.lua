@@ -1,180 +1,189 @@
--- Roblox Ultimate Skin & Size Copier (Works even if Offline / Left Game)
+-- Roblox Delta Multi-Tool GUI (Infinite Jump + Fly + Speed + Noclip)
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
 
--- إزالة الواجهة القديمة
-if LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("SkinCopierGui") then
-    LocalPlayer.PlayerGui.SkinCopierGui:Destroy()
+-- تنظيف الواجهة القديمة
+if LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("MultiToolGui") then
+    LocalPlayer.PlayerGui.MultiToolGui:Destroy()
 end
 
--- إنشاء الواجهة
+-- Variables
+local InfiniteJumpEnabled = false
+local NoclipEnabled = false
+local Flying = false
+local FlySpeed = 50
+
+-- ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "SkinCopierGui"
+ScreenGui.Name = "MultiToolGui"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
+-- Main Frame
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 260, 0, 160)
-MainFrame.Position = UDim2.new(0.5, -130, 0.4, -80)
+MainFrame.Size = UDim2.new(0, 260, 0, 310)
+MainFrame.Position = UDim2.new(0.5, -130, 0.3, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 10)
-UICorner.Parent = MainFrame
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
 
+-- Title
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 35)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "ناسخ السكنات (شغال أوفلاين/خارج اللعبة) 🔥"
+TitleLabel.Text = "قائمة الأدوات المتقدمة ⚡"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 12
+TitleLabel.TextSize = 15
 TitleLabel.Font = Enum.Font.SourceSansBold
 TitleLabel.Parent = MainFrame
 
-local UsernameInput = Instance.new("TextBox")
-UsernameInput.Size = UDim2.new(0.85, 0, 0, 35)
-UsernameInput.Position = UDim2.new(0.075, 0, 0.28, 0)
-UsernameInput.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-UsernameInput.TextColor3 = Color3.fromRGB(255, 255, 255)
-UsernameInput.PlaceholderText = "اكتب اليوزر هنا..."
-UsernameInput.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
-UsernameInput.Text = ""
-UsernameInput.TextSize = 14
-UsernameInput.Font = Enum.Font.SourceSans
-UsernameInput.Parent = MainFrame
+-- Helper Function to Create Buttons
+local function createButton(text, pos, color)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.85, 0, 0, 35)
+    btn.Position = pos
+    btn.BackgroundColor3 = color
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Text = text
+    btn.TextSize = 13
+    btn.Font = Enum.Font.SourceSansBold
+    btn.Parent = MainFrame
 
-local InputCorner = Instance.new("UICorner")
-InputCorner.CornerRadius = UDim.new(0, 6)
-InputCorner.Parent = UsernameInput
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
 
-local CopyButton = Instance.new("TextButton")
-CopyButton.Size = UDim2.new(0.85, 0, 0, 35)
-CopyButton.Position = UDim2.new(0.075, 0, 0.60, 0)
-CopyButton.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
-CopyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-CopyButton.Text = "نسخ السكن بالحجم الكامل"
-CopyButton.TextSize = 14
-CopyButton.Font = Enum.Font.SourceSansBold
-CopyButton.Parent = MainFrame
-
-local ButtonCorner = Instance.new("UICorner")
-ButtonCorner.CornerRadius = UDim.new(0, 6)
-ButtonCorner.Parent = CopyButton
-
--- دالة التطبيق القسري للمقاسات والأحجام (Forced Scale)
-local function applyScales(humanoid, description)
-    local scales = {
-        HeightScale = description.HeightScale,
-        WidthScale = description.WidthScale,
-        DepthScale = description.DepthScale,
-        HeadScale = description.HeadScale,
-        BodyTypeScale = description.BodyTypeScale,
-        ProportionScale = description.ProportionScale
-    }
-
-    for scaleName, scaleValue in pairs(scales) do
-        local valObj = humanoid:FindFirstChild(scaleName)
-        if valObj and valObj:IsA("NumberValue") then
-            valObj.Value = scaleValue
-        else
-            local newScale = Instance.new("NumberValue")
-            newScale.Name = scaleName
-            newScale.Value = scaleValue
-            newScale.Parent = humanoid
-        end
-    end
+    return btn
 end
 
--- دالة النسخ الرئيسية
-local function copySkin()
-    local targetUsername = string.gsub(UsernameInput.Text, "%s+", "")
-    if targetUsername == "" then 
-        CopyButton.Text = "اكتب اسم اليوزر أولاً!"
-        task.wait(1.5)
-        CopyButton.Text = "نسخ السكن بالحجم الكامل"
-        return 
+-- Buttons Creation
+local InfJumpBtn = createButton("القفز اللانهائي: معطل ❌", UDim2.new(0.075, 0, 0.15, 0), Color3.fromRGB(180, 50, 50))
+local SpeedBtn = createButton("زيادة السرعة (x2) 🏃", UDim2.new(0.075, 0, 0.30, 0), Color3.fromRGB(0, 140, 255))
+local FlyBtn = createButton("الطيران (Fly): معطل ❌", UDim2.new(0.075, 0, 0.45, 0), Color3.fromRGB(180, 50, 50))
+local NoclipBtn = createButton("اختراق الجدران: معطل ❌", UDim2.new(0.075, 0, 0.60, 0), Color3.fromRGB(180, 50, 50))
+local ResetSpeedBtn = createButton("إعادة السرعة العادية 🔄", UDim2.new(0.075, 0, 0.75, 0), Color3.fromRGB(70, 70, 80))
+
+-- Toggle GUI Button (زر تصغير/إخفاء القائمة)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+ToggleBtn.Position = UDim2.new(0, 10, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Text = "⚡"
+ToggleBtn.TextSize = 20
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+ToggleBtn.Parent = ScreenGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleBtn
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- 1. Infinite Jump Logic
+InfJumpBtn.MouseButton1Click:Connect(function()
+    InfiniteJumpEnabled = not InfiniteJumpEnabled
+    if InfiniteJumpEnabled then
+        InfJumpBtn.Text = "القفز اللانهائي: مفعل ✅"
+        InfJumpBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        InfJumpBtn.Text = "القفز اللانهائي: معطل ❌"
+        InfJumpBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
     end
+end)
 
-    CopyButton.Text = "جاري التحميل..."
-
-    task.spawn(function()
-        local myCharacter = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local myHumanoid = myCharacter:FindFirstChildOfClass("Humanoid")
-
-        if not (myCharacter and myHumanoid) then return end
-
-        local success, targetUserId = pcall(function()
-            return Players:GetUserIdFromNameAsync(targetUsername)
-        end)
-
-        if success and targetUserId then
-            local descSuccess, humanoidDesc = pcall(function()
-                return Players:GetHumanoidDescriptionFromUserId(targetUserId)
-            end)
-
-            if descSuccess and humanoidDesc then
-                -- 1. مسح الملابس والإكسسوارات الحالية
-                for _, item in pairs(myCharacter:GetChildren()) do
-                    if item:IsA("Accessory") or item:IsA("Shirt") or item:IsA("Pants") or item:IsA("ShirtGraphic") or item:IsA("BodyColors") or item:IsA("CharacterMesh") then
-                        item:Destroy()
-                    end
-                end
-
-                -- 2. تطبيق السكن والمظهر
-                pcall(function()
-                    myHumanoid:ApplyDescription(humanoidDesc)
-                end)
-
-                -- 3. إجبار تطبيق الحجم والمقاسات العميقة (تضخيم/تكبير السكن)
-                applyScales(myHumanoid, humanoidDesc)
-
-                -- 4. جلب الموديل المؤقت لنقل أجزاء الجسم العملاقة وإصلاح الوجه
-                local modelSuccess, targetModel = pcall(function()
-                    return Players:CreateHumanoidModelFromUserId(targetUserId)
-                end)
-
-                if modelSuccess and targetModel then
-                    for _, item in pairs(targetModel:GetChildren()) do
-                        if item:IsA("CharacterMesh") then
-                            item:Clone().Parent = myCharacter
-                        elseif item:IsA("Accessory") and not myCharacter:FindFirstChild(item.Name) then
-                            pcall(function()
-                                myHumanoid:AddAccessory(item:Clone())
-                            end)
-                        end
-                    end
-
-                    -- إصلاح الوجه دون اختفاء
-                    local myHead = myCharacter:FindFirstChild("Head")
-                    local targetHead = targetModel:FindFirstChild("Head")
-                    if myHead and targetHead then
-                        local targetFace = targetHead:FindFirstChildOfClass("Decal")
-                        if targetFace then
-                            local myFace = myHead:FindFirstChildOfClass("Decal")
-                            if myFace then myFace:Destroy() end
-                            targetFace:Clone().Parent = myHead
-                        end
-                    end
-
-                    targetModel:Destroy()
-                end
-
-                CopyButton.Text = "تم نسخ السكن والحجم! 🔥"
-            else
-                CopyButton.Text = "فشل جلب بيانات الحجم!"
+UserInputService.JumpRequest:Connect(function()
+    if InfiniteJumpEnabled then
+        local char = LocalPlayer.Character
+        if char then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
             end
-        else
-            CopyButton.Text = "اليوزر غير صحيح!"
         end
+    end
+end)
 
-        task.wait(2)
-        CopyButton.Text = "نسخ السكن بالحجم الكامل"
-    end)
-end
+-- 2. Speed Logic
+SpeedBtn.MouseButton1Click:Connect(function()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChildOfClass("Humanoid") then
+        char.Humanoid.WalkSpeed = 50
+    end
+end)
 
-CopyButton.MouseButton1Click:Connect(copySkin)
+ResetSpeedBtn.MouseButton1Click:Connect(function()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChildOfClass("Humanoid") then
+        char.Humanoid.WalkSpeed = 16
+    end
+end)
+
+-- 3. Noclip Logic
+NoclipBtn.MouseButton1Click:Connect(function()
+    NoclipEnabled = not NoclipEnabled
+    if NoclipEnabled then
+        NoclipBtn.Text = "اختراق الجدران: مفعل ✅"
+        NoclipBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        NoclipBtn.Text = "اختراق الجدران: معطل ❌"
+        NoclipBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if NoclipEnabled then
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+-- 4. Fly Logic
+FlyBtn.MouseButton1Click:Connect(function()
+    Flying = not Flying
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+
+    if Flying then
+        FlyBtn.Text = "الطيران (Fly): مفعل ✅"
+        FlyBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+        
+        local bv = Instance.new("BodyVelocity")
+        bv.Name = "FlyVelocity"
+        bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        bv.Parent = hrp
+
+        task.spawn(function()
+            while Flying and char and hrp:FindFirstChild("FlyVelocity") do
+                local cam = workspace.CurrentCamera
+                bv.Velocity = cam.CFrame.LookVector * FlySpeed
+                task.wait()
+            end
+            if bv then bv:Destroy() end
+        end)
+    else
+        FlyBtn.Text = "الطيران (Fly): معطل ❌"
+        FlyBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        if hrp:FindFirstChild("FlyVelocity") then
+            hrp.FlyVelocity:Destroy()
+        end
+    end
+end)
