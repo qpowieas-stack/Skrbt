@@ -1,4 +1,4 @@
--- Keyboard Simulator (Teleport & Touch Final Stage 150K / 200M / 1T)
+-- Keyboard Simulator (World Selector & Teleport Farm)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -9,7 +9,8 @@ if LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("KeyboardFarmGui") then
     LocalPlayer.PlayerGui.KeyboardFarmGui:Destroy()
 end
 
-local AutoWinEnabled = false
+local SelectedWorld = "World3" -- الافتراضي العالم الأخير (1T)
+local FarmActive = false
 local InfJumpEnabled = false
 local NoclipEnabled = false
 local GodmodeEnabled = false
@@ -22,8 +23,8 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 260, 0, 350)
-MainFrame.Position = UDim2.new(0.5, -130, 0.25, 0)
+MainFrame.Size = UDim2.new(0, 260, 0, 390)
+MainFrame.Position = UDim2.new(0.5, -130, 0.2, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -35,22 +36,22 @@ MainCorner.CornerRadius = UDim.new(0, 10)
 MainCorner.Parent = MainFrame
 
 local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Size = UDim2.new(1, 0, 0, 40)
+TitleLabel.Size = UDim2.new(1, 0, 0, 35)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "تجميع أقصى المراحل (انتقال فوري) 🏆🔥"
+TitleLabel.Text = "منقي ومختار عوالم الكيبورد ⌨️🎯"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 12
+TitleLabel.TextSize = 13
 TitleLabel.Font = Enum.Font.SourceSansBold
 TitleLabel.Parent = MainFrame
 
 local function createButton(text, pos, color)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.85, 0, 0, 36)
+    btn.Size = UDim2.new(0.85, 0, 0, 32)
     btn.Position = pos
     btn.BackgroundColor3 = color
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Text = text
-    btn.TextSize = 13
+    btn.TextSize = 12
     btn.Font = Enum.Font.SourceSansBold
     btn.Parent = MainFrame
 
@@ -60,11 +61,16 @@ local function createButton(text, pos, color)
     return btn
 end
 
-local AutoWinBtn  = createButton("تجميع أقصى فوز: معطل ❌", UDim2.new(0.075, 0, 0.13, 0), Color3.fromRGB(180, 50, 50))
-local Speed300Btn = createButton("تفعيل سرعة 300 ⚡", UDim2.new(0.075, 0, 0.30, 0), Color3.fromRGB(0, 140, 255))
-local GodmodeBtn  = createButton("عدم الموت (Godmode): معطل ❌", UDim2.new(0.075, 0, 0.47, 0), Color3.fromRGB(180, 50, 50))
-local InfJumpBtn  = createButton("القفز اللانهائي: معطل ❌", UDim2.new(0.075, 0, 0.64, 0), Color3.fromRGB(180, 50, 50))
-local NoclipBtn   = createButton("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.81, 0), Color3.fromRGB(180, 50, 50))
+-- أزرار اختيار العالم والتحكم
+local World1Btn = createButton("العالم الأول (150K): غير محدد ❌", UDim2.new(0.075, 0, 0.11, 0), Color3.fromRGB(70, 70, 80))
+local World2Btn = createButton("العالم الثاني (200M): غير محدد ❌", UDim2.new(0.075, 0, 0.22, 0), Color3.fromRGB(70, 70, 80))
+local World3Btn = createButton("العالم الثالث (1T): مفعل ✅", UDim2.new(0.075, 0, 0.33, 0), Color3.fromRGB(40, 180, 80))
+local ToggleFarmBtn = createButton("تشغيل التجميع التلقائي: معطل ❌", UDim2.new(0.075, 0, 0.45, 0), Color3.fromRGB(180, 50, 50))
+
+local Speed300Btn = createButton("تفعيل سرعة 300 ⚡", UDim2.new(0.075, 0, 0.58, 0), Color3.fromRGB(0, 140, 255))
+local GodmodeBtn  = createButton("عدم الموت (Godmode): معطل ❌", UDim2.new(0.075, 0, 0.69, 0), Color3.fromRGB(180, 50, 50))
+local InfJumpBtn  = createButton("القفز اللانهائي: معطل ❌", UDim2.new(0.075, 0, 0.80, 0), Color3.fromRGB(180, 50, 50))
+local NoclipBtn   = createButton("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.91, 0), Color3.fromRGB(180, 50, 50))
 
 -- زر تصغير القائمة
 local ToggleBtn = Instance.new("TextButton")
@@ -86,59 +92,92 @@ ToggleBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- 1. نظام الانتقال الفوري الفعال لخط النهاية الأخير
-AutoWinBtn.MouseButton1Click:Connect(function()
-    AutoWinEnabled = not AutoWinEnabled
-    if AutoWinEnabled then
-        AutoWinBtn.Text = "تجميع أقصى فوز: مفعل ✅"
-        AutoWinBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+-- نظام اختيار العالم بدقة
+World1Btn.MouseButton1Click:Connect(function()
+    SelectedWorld = "World1"
+    World1Btn.Text = "العالم الأول (150K): مفعل ✅"
+    World1Btn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    World2Btn.Text = "العالم الثاني (200M): غير محدد ❌"
+    World2Btn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+    World3Btn.Text = "العالم الثالث (1T): غير محدد ❌"
+    World3Btn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+end)
+
+World2Btn.MouseButton1Click:Connect(function()
+    SelectedWorld = "World2"
+    World1Btn.Text = "العالم الأول (150K): غير محدد ❌"
+    World1Btn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+    World2Btn.Text = "العالم الثاني (200M): مفعل ✅"
+    World2Btn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    World3Btn.Text = "العالم الثالث (1T): غير محدد ❌"
+    World3Btn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+end)
+
+World3Btn.MouseButton1Click:Connect(function()
+    SelectedWorld = "World3"
+    World1Btn.Text = "العالم الأول (150K): غير محدد ❌"
+    World1Btn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+    World2Btn.Text = "العالم الثاني (200M): غير محدد ❌"
+    World2Btn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+    World3Btn.Text = "العالم الثالث (1T): مفعل ✅"
+    World3Btn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+end)
+
+-- تشغيل/إيقاف الزراعة بالعالم المحدد
+ToggleFarmBtn.MouseButton1Click:Connect(function()
+    FarmActive = not FarmActive
+    if FarmActive then
+        ToggleFarmBtn.Text = "تشغيل التجميع التلقائي: مفعل ✅"
+        ToggleFarmBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
     else
-        AutoWinBtn.Text = "تجميع أقصى فوز: معطل ❌"
-        AutoWinBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        ToggleFarmBtn.Text = "تشغيل التجميع التلقائي: معطل ❌"
+        ToggleFarmBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
     end
 end)
 
+-- تنفيذ الانتقال والتجميع حسب العالم المختار
 task.spawn(function()
     while true do
-        if AutoWinEnabled then
+        if FarmActive then
             pcall(function()
                 local char = LocalPlayer.Character
                 if char and char:FindFirstChild("HumanoidRootPart") then
                     local hrp = char.HumanoidRootPart
-                    local bestPortal = nil
-                    local maxZ = -999999
+                    local targetPortal = nil
 
-                    -- البحث عن الجزء الأبعد في الماب (خط النهاية الحقيقي) وتجنب بوابات العودة
                     for _, v in pairs(workspace:GetDescendants()) do
                         if v:IsA("BasePart") or v:IsA("MeshPart") then
-                            local strName = (v.Name .. " " .. (v.Parent and v.Parent.Name or "")):lower()
-                            
-                            if not (strName:find("return") or strName:find("back") or strName:find("checkpoint") or strName:find("spawn")) then
-                                if strName:find("win") or strName:find("end") or strName:find("trophy") or strName:find("150k") or strName:find("200m") or strName:find("1t") then
-                                    local posVal = math.abs(v.Position.X) + math.abs(v.Position.Z)
-                                    if posVal > maxZ then
-                                        maxZ = posVal
-                                        bestPortal = v
-                                    end
+                            local name = v.Name:lower()
+                            local parentName = v.Parent and v.Parent.Name:lower() or ""
+                            local fullName = name .. " " .. parentName
+
+                            -- تصفية استناداً إلى العالم المختار بدقة لتجنب بوابات الرجوع
+                            if not (fullName:find("checkpoint") or fullName:find("return") or fullName:find("spawn")) then
+                                if SelectedWorld == "World1" and (fullName:find("150k") or fullName:find("world1") or fullName:find("stage150")) then
+                                    targetPortal = v
+                                elseif SelectedWorld == "World2" and (fullName:find("200m") or fullName:find("world2") or fullName:find("stage200")) then
+                                    targetPortal = v
+                                elseif SelectedWorld == "World3" and (fullName:find("1t") or fullName:find("world3") or fullName:find("trillion") or fullName:find("final")) then
+                                    targetPortal = v
                                 end
                             end
                         end
                     end
 
-                    -- الانتقال الفوري المباشر لجزء النهاية ثم لمسه
-                    if bestPortal then
-                        hrp.CFrame = bestPortal.CFrame + Vector3.new(0, 2, 0)
-                        firetouchinterest(hrp, bestPortal, 0)
-                        firetouchinterest(hrp, bestPortal, 1)
+                    -- إذا وجد البوابة الخاصة بالعالم المختار، ينتقل إليها مباشرة
+                    if targetPortal then
+                        hrp.CFrame = targetPortal.CFrame + Vector3.new(0, 3, 0)
+                        firetouchinterest(hrp, targetPortal, 0)
+                        firetouchinterest(hrp, targetPortal, 1)
                     end
                 end
             end)
         end
-        task.wait(1.5) -- مهلة زمنية بسيطة بين كل انتقال لتجنب تعليق اللعبة
+        task.wait(1)
     end
 end)
 
--- 2. سرعة 300
+-- سرعة 300
 Speed300Btn.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChildOfClass("Humanoid") then
@@ -149,7 +188,7 @@ Speed300Btn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 3. عدم الموت
+-- عدم الموت
 GodmodeBtn.MouseButton1Click:Connect(function()
     GodmodeEnabled = not GodmodeEnabled
     if GodmodeEnabled then
@@ -176,7 +215,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 4. القفز اللانهائي
+-- القفز اللانهائي
 InfJumpBtn.MouseButton1Click:Connect(function()
     InfJumpEnabled = not InfJumpEnabled
     if InfJumpEnabled then
@@ -200,7 +239,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- 5. اختراق الجدران (Noclip)
+-- Noclip
 NoclipBtn.MouseButton1Click:Connect(function()
     NoclipEnabled = not NoclipEnabled
     if NoclipEnabled then
