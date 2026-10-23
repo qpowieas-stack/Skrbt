@@ -1,4 +1,4 @@
--- Keyboard Simulator Ultimate GUI (Auto Trophies + Speed 300 + Godmode + Inf Jump)
+-- Keyboard Simulator (Target Highest Wins: 150K / 200M / 1T)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -39,13 +39,12 @@ MainCorner.Parent = MainFrame
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 40)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "سكربت ماب الكيبورد الشامل ⌨️🔥"
+TitleLabel.Text = "تجميع أخير المراحل (150K / 200M / 1T) 🏆"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.TextSize = 13
+TitleLabel.TextSize = 12
 TitleLabel.Font = Enum.Font.SourceSansBold
 TitleLabel.Parent = MainFrame
 
--- دالة لإنشاء الأزرار
 local function createButton(text, pos, color)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.85, 0, 0, 36)
@@ -63,14 +62,14 @@ local function createButton(text, pos, color)
     return btn
 end
 
--- الأزرار داخل القائمة
-local AutoWinBtn  = createButton("تجميع الكؤوس التلقائي: معطل ❌", UDim2.new(0.075, 0, 0.13, 0), Color3.fromRGB(180, 50, 50))
+-- الأزرار
+local AutoWinBtn  = createButton("تجميع الكؤوس القصوى: معطل ❌", UDim2.new(0.075, 0, 0.13, 0), Color3.fromRGB(180, 50, 50))
 local Speed300Btn = createButton("تفعيل سرعة 300 ⚡", UDim2.new(0.075, 0, 0.30, 0), Color3.fromRGB(0, 140, 255))
 local GodmodeBtn  = createButton("عدم الموت (Godmode): معطل ❌", UDim2.new(0.075, 0, 0.47, 0), Color3.fromRGB(180, 50, 50))
 local InfJumpBtn  = createButton("القفز اللانهائي: معطل ❌", UDim2.new(0.075, 0, 0.64, 0), Color3.fromRGB(180, 50, 50))
 local NoclipBtn   = createButton("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.81, 0), Color3.fromRGB(180, 50, 50))
 
--- زر تصغير وإخفاء القائمة (عائمة)
+-- زر تصغير وإخفاء القائمة
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
 ToggleBtn.Position = UDim2.new(0, 10, 0.4, 0)
@@ -90,14 +89,14 @@ ToggleBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- 1. تجميع الكؤوس التلقائي (Auto Win / Trophies)
+-- 1. خوارزمية البحث واللمس لأكبر نقطة فوز (الـ Win الأخير فقط)
 AutoWinBtn.MouseButton1Click:Connect(function()
     AutoWinEnabled = not AutoWinEnabled
     if AutoWinEnabled then
-        AutoWinBtn.Text = "تجميع الكؤوس التلقائي: مفعل ✅"
+        AutoWinBtn.Text = "تجميع الكؤوس القصوى: مفعل ✅"
         AutoWinBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
     else
-        AutoWinBtn.Text = "تجميع الكؤوس التلقائي: معطل ❌"
+        AutoWinBtn.Text = "تجميع الكؤوس القصوى: معطل ❌"
         AutoWinBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
     end
 end)
@@ -108,16 +107,33 @@ task.spawn(function()
             pcall(function()
                 local char = LocalPlayer.Character
                 if char and char:FindFirstChild("HumanoidRootPart") then
+                    local hrp = char.HumanoidRootPart
+
+                    -- تجميع كل نقاط الفوز المتاحة مرتبة من الأبعد/الأعلى
+                    local winParts = {}
                     for _, obj in pairs(workspace:GetDescendants()) do
-                        if obj.Name == "TouchInterest" and obj.Parent and (obj.Parent.Name:lower():find("win") or obj.Parent.Name:lower():find("end") or obj.Parent.Name:lower():find("goal")) then
-                            firetouchinterest(char.HumanoidRootPart, obj.Parent, 0)
-                            firetouchinterest(char.HumanoidRootPart, obj.Parent, 1)
+                        if obj:IsA("TouchTransmitter") or obj.Name == "TouchInterest" then
+                            local parent = obj.Parent
+                            if parent and (parent.Name:lower():find("win") or parent.Name:lower():find("end") or parent.Name:lower():find("trophy") or parent.Name:lower():find("finish")) then
+                                table.insert(winParts, parent)
+                            end
+                        end
+                    end
+
+                    -- تفاعل مع أطراف ونهايات المراحل (تحديداً الأخير في القائمة لتجاوز المراحل الأولى)
+                    if #winParts > 0 then
+                        for i = #winParts, 1, -1 do
+                            local targetPart = winParts[i]
+                            if targetPart and targetPart:IsA("BasePart") then
+                                firetouchinterest(hrp, targetPart, 0)
+                                firetouchinterest(hrp, targetPart, 1)
+                            end
                         end
                     end
                 end
             end)
         end
-        task.wait(0.5)
+        task.wait(0.3)
     end
 end)
 
@@ -132,7 +148,7 @@ Speed300Btn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 3. حماية عدم الموت (Godmode / Anti-Die)
+-- 3. عدم الموت
 GodmodeBtn.MouseButton1Click:Connect(function()
     GodmodeEnabled = not GodmodeEnabled
     if GodmodeEnabled then
@@ -159,7 +175,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- 4. القفز اللانهائي (Infinite Jump)
+-- 4. القفز اللانهائي
 InfJumpBtn.MouseButton1Click:Connect(function()
     InfJumpEnabled = not InfJumpEnabled
     if InfJumpEnabled then
@@ -183,7 +199,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- 5. اختراق الجدران (Noclip)
+-- 5. Noclip
 NoclipBtn.MouseButton1Click:Connect(function()
     NoclipEnabled = not NoclipEnabled
     if NoclipEnabled then
