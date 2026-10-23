@@ -1,0 +1,209 @@
+-- Keyboard Simulator Ultimate GUI (Auto Trophies + Speed 300 + Godmode + Inf Jump)
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- تنظيف الواجهة القديمة
+if LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("KeyboardFarmGui") then
+    LocalPlayer.PlayerGui.KeyboardFarmGui:Destroy()
+end
+
+-- المتغيرات
+local AutoWinEnabled = false
+local InfJumpEnabled = false
+local NoclipEnabled = false
+local GodmodeEnabled = false
+
+-- إنشاء الواجهة الرئيسية
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KeyboardFarmGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 260, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -130, 0.25, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 10)
+MainCorner.Parent = MainFrame
+
+-- عنوان القائمة
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Size = UDim2.new(1, 0, 0, 40)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.Text = "سكربت ماب الكيبورد الشامل ⌨️🔥"
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.TextSize = 13
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.Parent = MainFrame
+
+-- دالة لإنشاء الأزرار
+local function createButton(text, pos, color)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.85, 0, 0, 36)
+    btn.Position = pos
+    btn.BackgroundColor3 = color
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Text = text
+    btn.TextSize = 13
+    btn.Font = Enum.Font.SourceSansBold
+    btn.Parent = MainFrame
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 6)
+    corner.Parent = btn
+    return btn
+end
+
+-- الأزرار داخل القائمة
+local AutoWinBtn  = createButton("تجميع الكؤوس التلقائي: معطل ❌", UDim2.new(0.075, 0, 0.13, 0), Color3.fromRGB(180, 50, 50))
+local Speed300Btn = createButton("تفعيل سرعة 300 ⚡", UDim2.new(0.075, 0, 0.30, 0), Color3.fromRGB(0, 140, 255))
+local GodmodeBtn  = createButton("عدم الموت (Godmode): معطل ❌", UDim2.new(0.075, 0, 0.47, 0), Color3.fromRGB(180, 50, 50))
+local InfJumpBtn  = createButton("القفز اللانهائي: معطل ❌", UDim2.new(0.075, 0, 0.64, 0), Color3.fromRGB(180, 50, 50))
+local NoclipBtn   = createButton("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.81, 0), Color3.fromRGB(180, 50, 50))
+
+-- زر تصغير وإخفاء القائمة (عائمة)
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+ToggleBtn.Position = UDim2.new(0, 10, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Text = "⌨️"
+ToggleBtn.TextSize = 20
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+ToggleBtn.Parent = ScreenGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleBtn
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- 1. تجميع الكؤوس التلقائي (Auto Win / Trophies)
+AutoWinBtn.MouseButton1Click:Connect(function()
+    AutoWinEnabled = not AutoWinEnabled
+    if AutoWinEnabled then
+        AutoWinBtn.Text = "تجميع الكؤوس التلقائي: مفعل ✅"
+        AutoWinBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        AutoWinBtn.Text = "تجميع الكؤوس التلقائي: معطل ❌"
+        AutoWinBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    end
+end)
+
+task.spawn(function()
+    while true do
+        if AutoWinEnabled then
+            pcall(function()
+                local char = LocalPlayer.Character
+                if char and char:FindFirstChild("HumanoidRootPart") then
+                    for _, obj in pairs(workspace:GetDescendants()) do
+                        if obj.Name == "TouchInterest" and obj.Parent and (obj.Parent.Name:lower():find("win") or obj.Parent.Name:lower():find("end") or obj.Parent.Name:lower():find("goal")) then
+                            firetouchinterest(char.HumanoidRootPart, obj.Parent, 0)
+                            firetouchinterest(char.HumanoidRootPart, obj.Parent, 1)
+                        end
+                    end
+                end
+            end)
+        end
+        task.wait(0.5)
+    end
+end)
+
+-- 2. زر سرعة 300
+Speed300Btn.MouseButton1Click:Connect(function()
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChildOfClass("Humanoid") then
+        char.Humanoid.WalkSpeed = 300
+        Speed300Btn.Text = "تم تفعيل سرعة 300 🔥"
+        task.wait(1.5)
+        Speed300Btn.Text = "تفعيل سرعة 300 ⚡"
+    end
+end)
+
+-- 3. حماية عدم الموت (Godmode / Anti-Die)
+GodmodeBtn.MouseButton1Click:Connect(function()
+    GodmodeEnabled = not GodmodeEnabled
+    if GodmodeEnabled then
+        GodmodeBtn.Text = "عدم الموت (Godmode): مفعل ✅"
+        GodmodeBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        GodmodeBtn.Text = "عدم الموت (Godmode): معطل ❌"
+        GodmodeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if GodmodeEnabled then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum.Health = hum.MaxHealth
+                    hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                end
+            end
+        end)
+    end
+end)
+
+-- 4. القفز اللانهائي (Infinite Jump)
+InfJumpBtn.MouseButton1Click:Connect(function()
+    InfJumpEnabled = not InfJumpEnabled
+    if InfJumpEnabled then
+        InfJumpBtn.Text = "القفز اللانهائي: مفعل ✅"
+        InfJumpBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        InfJumpBtn.Text = "القفز اللانهائي: معطل ❌"
+        InfJumpBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    end
+end)
+
+UserInputService.JumpRequest:Connect(function()
+    if InfJumpEnabled then
+        local char = LocalPlayer.Character
+        if char then
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end
+    end
+end)
+
+-- 5. اختراق الجدران (Noclip)
+NoclipBtn.MouseButton1Click:Connect(function()
+    NoclipEnabled = not NoclipEnabled
+    if NoclipEnabled then
+        NoclipBtn.Text = "اختراق الجدران (Noclip): مفعل ✅"
+        NoclipBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        NoclipBtn.Text = "اختراق الجدران (Noclip): معطل ❌"
+        NoclipBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    end
+end)
+
+RunService.Stepped:Connect(function()
+    if NoclipEnabled then
+        local char = LocalPlayer.Character
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = false
+                end
+            end
+        end
+    end
+end)
