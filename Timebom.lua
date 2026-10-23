@@ -1,5 +1,4 @@
--- Time Bomb Script - Delta Executer
--- Features: Draggable UI + Minimize (-) Button + Hitbox Control + Speed & Jump
+-- Time Bomb Script - Delta Executer (Full Body Hitbox Expander)
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
@@ -25,7 +24,7 @@ MainFrame.Position = UDim2.new(0.5, -160, 0.5, -170)
 MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
-MainFrame.Draggable = true -- إمكانية تحريك القائمة بالتسحيب
+MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
 
 local UICorner = Instance.new("UICorner", MainFrame)
@@ -59,11 +58,11 @@ MiniBtn.Font = Enum.Font.SourceSansBold
 MiniBtn.TextSize = 20
 Instance.new("UICorner", MiniBtn).CornerRadius = UDim.new(0, 6)
 
--- Open Button (Small Floating Button in Screen Corner with '-')
+-- Open Button (Small Floating Button in Screen Corner)
 local OpenBtn = Instance.new("TextButton", ScreenGui)
 OpenBtn.Name = "OpenBtn"
 OpenBtn.Size = UDim2.new(0, 40, 0, 40)
-OpenBtn.Position = UDim2.new(0, 15, 0, 15) -- زاوية الشاشة
+OpenBtn.Position = UDim2.new(0, 15, 0, 15)
 OpenBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
 OpenBtn.Text = "-"
 OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -71,10 +70,9 @@ OpenBtn.Font = Enum.Font.SourceSansBold
 OpenBtn.TextSize = 22
 OpenBtn.Visible = false
 OpenBtn.Active = true
-OpenBtn.Draggable = true -- إمكانية تحريك زر الإظهار أيضاً
+OpenBtn.Draggable = true
 Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(0, 8)
 
--- Minimize & Restore Functions
 MiniBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
     OpenBtn.Visible = true
@@ -99,10 +97,9 @@ UIListLayout.Padding = UDim.new(0, 10)
 
 -- Global Variables
 _G.HitboxEnabled = false
-_G.HitboxSize = 15
+_G.HitboxSize = 4 -- حجم متوازن لأجزاء الجسم حتى لا تختفي الشخصية
 _G.InfJump = false
 
--- Function: Create Button
 local function CreateButton(text, callback)
     local btn = Instance.new("TextButton", ContentFrame)
     btn.Size = UDim2.new(1, 0, 0, 35)
@@ -116,7 +113,6 @@ local function CreateButton(text, callback)
     return btn
 end
 
--- Function: Create Toggle
 local function CreateToggle(text, callback)
     local enabled = false
     local btn = Instance.new("TextButton", ContentFrame)
@@ -144,20 +140,25 @@ local function CreateToggle(text, callback)
     return btn
 end
 
--- 1. Hitbox Toggle
-CreateToggle("تفعيل الهيت بوكس (Hitbox)", function(state)
+-- 1. Full Body Hitbox Toggle
+CreateToggle("تفعيل الهيت بوكس (Full Body)", function(state)
     _G.HitboxEnabled = state
     task.spawn(function()
         while _G.HitboxEnabled do
             task.wait(0.2)
             for _, plr in pairs(Players:GetPlayers()) do
-                if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                    local hrp = plr.Character.HumanoidRootPart
-                    hrp.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
-                    hrp.Transparency = 0.6
-                    hrp.BrickColor = BrickColor.new("Bright red")
-                    hrp.Material = Enum.Material.ForceField
-                    hrp.CanCollide = false
+                if plr ~= LocalPlayer and plr.Character then
+                    for _, part in pairs(plr.Character:GetChildren()) do
+                        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                            part.Size = Vector3.new(_G.HitboxSize, _G.HitboxSize, _G.HitboxSize)
+                            part.Transparency = 0.6
+                            part.CanCollide = false
+                        elseif part.Name == "HumanoidRootPart" then
+                            part.Size = Vector3.new(_G.HitboxSize + 1, _G.HitboxSize + 1, _G.HitboxSize + 1)
+                            part.Transparency = 0.6
+                            part.CanCollide = false
+                        end
+                    end
                 end
             end
         end
@@ -173,7 +174,7 @@ Instance.new("UICorner", SizeFrame).CornerRadius = UDim.new(0, 6)
 local SizeLabel = Instance.new("TextLabel", SizeFrame)
 SizeLabel.Size = UDim2.new(0.5, 0, 1, 0)
 SizeLabel.BackgroundTransparency = 1
-SizeLabel.Text = "حجم الهيت بوكس: " .. tostring(_G.HitboxSize)
+SizeLabel.Text = "حجم المربعات: " .. tostring(_G.HitboxSize)
 SizeLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 SizeLabel.Font = Enum.Font.SourceSans
 SizeLabel.TextSize = 15
@@ -197,13 +198,13 @@ PlusBtn.TextSize = 18
 Instance.new("UICorner", PlusBtn).CornerRadius = UDim.new(0, 4)
 
 PlusBtn.MouseButton1Click:Connect(function()
-    _G.HitboxSize = math.min(_G.HitboxSize + 5, 60)
-    SizeLabel.Text = "حجم الهيت بوكس: " .. tostring(_G.HitboxSize)
+    _G.HitboxSize = math.min(_G.HitboxSize + 1, 15)
+    SizeLabel.Text = "حجم المربعات: " .. tostring(_G.HitboxSize)
 end)
 
 MinusBtn.MouseButton1Click:Connect(function()
-    _G.HitboxSize = math.max(_G.HitboxSize - 5, 2)
-    SizeLabel.Text = "حجم الهيت بوكس: " .. tostring(_G.HitboxSize)
+    _G.HitboxSize = math.max(_G.HitboxSize - 1, 2)
+    SizeLabel.Text = "حجم المربعات: " .. tostring(_G.HitboxSize)
 end)
 
 -- 3. Teleport Button
