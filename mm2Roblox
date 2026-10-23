@@ -1,0 +1,291 @@
+-- MM2 Ultimate Cheat GUI (ESP, Hitbox, Kill Murderer/Sheriff, Teleport, Toggle UI)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+-- إزالة الواجهة القديمة إن وجدت
+if LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("MM2GodGui") then
+    LocalPlayer.PlayerGui.MM2GodGui:Destroy()
+end
+
+local ESPEnabled = false
+local HitboxEnabled = false
+local SpeedEnabled = false
+local JumpEnabled = false
+local NoclipEnabled = false
+local HitboxSize = 15
+
+-- إنشاء الواجهة الرئيسية
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MM2GodGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 250, 0, 430)
+MainFrame.Position = UDim2.new(0.5, -125, 0.2, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local Corner = Instance.new("UICorner")
+Corner.CornerRadius = UDim.new(0, 10)
+Corner.Parent = MainFrame
+
+-- عنوان القائمة
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 35)
+Title.BackgroundTransparency = 1
+Title.Text = "MM2 السكربت المدمر والنهائي 🔪🔥"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 12
+Title.Font = Enum.Font.SourceSansBold
+Title.Parent = MainFrame
+
+-- دالة لإنشاء الأزرار بسلاسة
+local function createBtn(text, pos, color)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.85, 0, 0, 32)
+    btn.Position = pos
+    btn.BackgroundColor3 = color
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Text = text
+    btn.TextSize = 12
+    btn.Font = Enum.Font.SourceSansBold
+    btn.Parent = MainFrame
+    
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, 6)
+    c.Parent = btn
+    return btn
+end
+
+-- الأزرار داخل القائمة
+local ESPBtn       = createBtn("كشف الأدوار (ESP): معطل ❌", UDim2.new(0.075, 0, 0.10, 0), Color3.fromRGB(180, 50, 50))
+local HitboxBtn    = createBtn("تكبير الهيت بوكس: معطل ❌", UDim2.new(0.075, 0, 0.21, 0), Color3.fromRGB(180, 50, 50))
+local KillMurderer = createBtn("قتل القاتل فوراً ⚡ (Kill Murderer)", UDim2.new(0.075, 0, 0.32, 0), Color3.fromRGB(200, 30, 30))
+local KillSheriff  = createBtn("قتل الشريف فوراً ⚡ (Kill Sheriff)", UDim2.new(0.075, 0, 0.43, 0), Color3.fromRGB(30, 100, 200))
+local TpToMurder   = createBtn("انتقال سريع للقاتل (TP to Murder)", UDim2.new(0.075, 0, 0.54, 0), Color3.fromRGB(140, 0, 180))
+local SpeedBtn     = createBtn("سرعة خارقة (Speed): معطل ❌", UDim2.new(0.075, 0, 0.65, 0), Color3.fromRGB(70, 70, 80))
+local JumpBtn      = createBtn("قفز عالي (Jump): معطل ❌", UDim2.new(0.075, 0, 0.76, 0), Color3.fromRGB(70, 70, 80))
+local NoclipBtn    = createBtn("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.87, 0), Color3.fromRGB(70, 70, 80))
+
+-- زر عائم لإخفاء وإظهار القائمة
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
+ToggleBtn.Position = UDim2.new(0, 10, 0.4, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.Text = "👁️"
+ToggleBtn.TextSize = 20
+ToggleBtn.Active = true
+ToggleBtn.Draggable = true
+ToggleBtn.Parent = ScreenGui
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(1, 0)
+ToggleCorner.Parent = ToggleBtn
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = not MainFrame.Visible
+end)
+
+-- دالة مساعدة للبحث عن القاتل أو الشريف
+local function getPlayerByRole(targetRole)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local char = p.Character
+            local backpack = p:FindFirstChild("Backpack")
+            local hasKnife = char:FindFirstChild("Knife") or (backpack and backpack:FindFirstChild("Knife"))
+            local hasGun = char:FindFirstChild("Gun") or (backpack and backpack:FindFirstChild("Gun"))
+            
+            if targetRole == "Murderer" and hasKnife then
+                return p
+            elseif targetRole == "Sheriff" and hasGun then
+                return p
+            end
+        end
+    end
+    return nil
+end
+
+-- 1. كشف الأدوار (ESP)
+ESPBtn.MouseButton1Click:Connect(function()
+    ESPEnabled = not ESPEnabled
+    if ESPEnabled then
+        ESPBtn.Text = "كشف الأدوار (ESP): مفعل ✅"
+        ESPBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        ESPBtn.Text = "كشف الأدوار (ESP): معطل ❌"
+        ESPBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    end
+end)
+
+-- 2. تكبير الهيت بوكس
+HitboxBtn.MouseButton1Click:Connect(function()
+    HitboxEnabled = not HitboxEnabled
+    if HitboxEnabled then
+        HitboxBtn.Text = "تكبير الهيت بوكس: مفعل ✅"
+        HitboxBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        HitboxBtn.Text = "تكبير الهيت بوكس: معطل ❌"
+        HitboxBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
+                p.Character.HumanoidRootPart.Transparency = 1
+            end
+        end
+    end
+end)
+
+-- 3. زر قتل القاتل فوراً
+KillMurderer.MouseButton1Click:Connect(function()
+    pcall(function()
+        local murderer = getPlayerByRole("Murderer")
+        if murderer and murderer.Character and murderer.Character:FindFirstChild("Humanoid") then
+            -- الانتقال الفوري إليه ثم قتله أو إلحاق الضرر به
+            local hrp = LocalPlayer.Character.HumanoidRootPart
+            local mHrp = murderer.Character.HumanoidRootPart
+            hrp.CFrame = mHrp.CFrame * CFrame.new(0, 0, 2)
+            task.wait(0.1)
+            murderer.Character.Humanoid.Health = 0
+        end
+    end)
+end)
+
+-- 4. زر قتل الشريف فوراً
+KillSheriff.MouseButton1Click:Connect(function()
+    pcall(function()
+        local sheriff = getPlayerByRole("Sheriff")
+        if sheriff and sheriff.Character and sheriff.Character:FindFirstChild("Humanoid") then
+            local hrp = LocalPlayer.Character.HumanoidRootPart
+            local sHrp = sheriff.Character.HumanoidRootPart
+            hrp.CFrame = sHrp.CFrame * CFrame.new(0, 0, 2)
+            task.wait(0.1)
+            sheriff.Character.Humanoid.Health = 0
+        end
+    end)
+end)
+
+-- 5. زر الانتقال السريع لمكان القاتل
+TpToMurder.MouseButton1Click:Connect(function()
+    pcall(function()
+        local murderer = getPlayerByRole("Murderer")
+        if murderer and murderer.Character and murderer.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = murderer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+        end
+    end)
+end)
+
+-- 6. السرعة
+SpeedBtn.MouseButton1Click:Connect(function()
+    SpeedEnabled = not SpeedEnabled
+    if SpeedEnabled then
+        SpeedBtn.Text = "سرعة خارقة (Speed): مفعل ✅"
+        SpeedBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        SpeedBtn.Text = "سرعة خارقة (Speed): معطل ❌"
+        SpeedBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = 16
+        end
+    end
+end)
+
+-- 7. القفز العالي
+JumpBtn.MouseButton1Click:Connect(function()
+    JumpEnabled = not JumpEnabled
+    if JumpEnabled then
+        JumpBtn.Text = "قفز عالي (Jump): مفعل ✅"
+        JumpBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        JumpBtn.Text = "قفز عالي (Jump): معطل ❌"
+        JumpBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = 50
+        end
+    end
+end)
+
+-- 8. اختراق الجدران
+NoclipBtn.MouseButton1Click:Connect(function()
+    NoclipEnabled = not NoclipEnabled
+    if NoclipEnabled then
+        NoclipBtn.Text = "اختراق الجدران (Noclip): مفعل ✅"
+        NoclipBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
+    else
+        NoclipBtn.Text = "اختراق الجدران (Noclip): معطل ❌"
+        NoclipBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+    end
+end)
+
+-- حلقة التحديث المستمر
+RunService.RenderStepped:Connect(function()
+    -- ESP Logic
+    if ESPEnabled then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local backpack = p:FindFirstChild("Backpack")
+                local char = p.Character
+                local roleColor = Color3.fromRGB(0, 255, 0) -- أخضر للأبرياء
+                local hasKnife = char:FindFirstChild("Knife") or (backpack and backpack:FindFirstChild("Knife"))
+                local hasGun = char:FindFirstChild("Gun") or (backpack and backpack:FindFirstChild("Gun"))
+                
+                if hasKnife then
+                    roleColor = Color3.fromRGB(255, 0, 0) -- أحمر للقاتل
+                elseif hasGun then
+                    roleColor = Color3.fromRGB(0, 150, 255) -- أزرق للشريف
+                end
+
+                local hl = char:FindFirstChild("MM2_HL")
+                if not hl then
+                    hl = Instance.new("Highlight")
+                    hl.Name = "MM2_HL"
+                    hl.Adornee = char
+                    hl.Parent = char
+                end
+                hl.FillColor = roleColor
+                hl.OutlineColor = Color3.fromRGB(255, 255, 255)
+            end
+        end
+    else
+        for _, p in pairs(Players:GetPlayers()) do
+            if p.Character and p.Character:FindFirstChild("MM2_HL") then
+                p.Character.MM2_HL:Destroy()
+            end
+        end
+    end
+
+    -- Hitbox Logic
+    if HitboxEnabled then
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = p.Character.HumanoidRootPart
+                hrp.Size = Vector3.new(HitboxSize, HitboxSize, HitboxSize)
+                hrp.Transparency = 0.7
+                hrp.BrickColor = BrickColor.new("Really red")
+                hrp.CanCollide = false
+            end
+        end
+    end
+
+    -- Speed & Jump Logic
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChildOfClass("Humanoid") then
+        if SpeedEnabled then char.Humanoid.WalkSpeed = 35 end
+        if JumpEnabled then char.Humanoid.JumpPower = 120 end
+    end
+
+    -- Noclip Logic
+    if NoclipEnabled and char then
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = false
+            end
+        end
+    end
+end)
