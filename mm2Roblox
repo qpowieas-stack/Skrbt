@@ -1,6 +1,7 @@
--- MM2 Ultimate Cheat GUI (ESP, Hitbox, Kill Murderer/Sheriff, Teleport, Toggle UI)
+-- MM2 Ultimate GUI (ESP, Hitbox, Fly, Kill, Toggle Button in Corner)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
 -- إزالة الواجهة القديمة إن وجدت
@@ -10,10 +11,14 @@ end
 
 local ESPEnabled = false
 local HitboxEnabled = false
+local FlyEnabled = false
 local SpeedEnabled = false
 local JumpEnabled = false
 local NoclipEnabled = false
 local HitboxSize = 15
+
+local flySpeed = 50
+local bv, bg
 
 -- إنشاء الواجهة الرئيسية
 local ScreenGui = Instance.new("ScreenGui")
@@ -23,7 +28,7 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 250, 0, 430)
+MainFrame.Size = UDim2.new(0, 250, 0, 470)
 MainFrame.Position = UDim2.new(0.5, -125, 0.2, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
@@ -37,13 +42,41 @@ Corner.Parent = MainFrame
 
 -- عنوان القائمة
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 35)
+Title.Size = UDim2.new(1, -45, 0, 40)
+Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "MM2 السكربت المدمر والنهائي 🔪🔥"
+Title.Text = "MM2 السكربت المطور 🔪🔥"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 12
 Title.Font = Enum.Font.SourceSansBold
 Title.Parent = MainFrame
+
+-- زر الإخفاء والإظهار في زاوية القائمة العليا
+local CornerToggleBtn = Instance.new("TextButton")
+CornerToggleBtn.Size = UDim2.new(0, 35, 0, 35)
+CornerToggleBtn.Position = UDim2.new(1, -40, 0, 3)
+CornerToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+CornerToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CornerToggleBtn.Text = "👁️"
+CornerToggleBtn.TextSize = 16
+CornerToggleBtn.Parent = MainFrame
+
+local CornerToggleCorner = Instance.new("UICorner")
+CornerToggleCorner.CornerRadius = UDim.new(0, 6)
+CornerToggleCorner.Parent = CornerToggleBtn
+
+CornerToggleBtn.MouseButton1Click:Connect(function()
+    for _, child in pairs(MainFrame:GetChildren()) do
+        if child ~= Title and child ~= CornerToggleBtn and child ~= Corner then
+            child.Visible = not child.Visible
+        end
+    end
+    if MainFrame.Size.Y.Offset == 470 then
+        MainFrame.Size = UDim2.new(0, 250, 0, 45)
+    else
+        MainFrame.Size = UDim2.new(0, 250, 0, 470)
+    end
+end)
 
 -- دالة لإنشاء الأزرار بسلاسة
 local function createBtn(text, pos, color)
@@ -65,35 +98,15 @@ end
 
 -- الأزرار داخل القائمة
 local ESPBtn       = createBtn("كشف الأدوار (ESP): معطل ❌", UDim2.new(0.075, 0, 0.10, 0), Color3.fromRGB(180, 50, 50))
-local HitboxBtn    = createBtn("تكبير الهيت بوكس: معطل ❌", UDim2.new(0.075, 0, 0.21, 0), Color3.fromRGB(180, 50, 50))
-local KillMurderer = createBtn("قتل القاتل فوراً ⚡ (Kill Murderer)", UDim2.new(0.075, 0, 0.32, 0), Color3.fromRGB(200, 30, 30))
-local KillSheriff  = createBtn("قتل الشريف فوراً ⚡ (Kill Sheriff)", UDim2.new(0.075, 0, 0.43, 0), Color3.fromRGB(30, 100, 200))
-local TpToMurder   = createBtn("انتقال سريع للقاتل (TP to Murder)", UDim2.new(0.075, 0, 0.54, 0), Color3.fromRGB(140, 0, 180))
-local SpeedBtn     = createBtn("سرعة خارقة (Speed): معطل ❌", UDim2.new(0.075, 0, 0.65, 0), Color3.fromRGB(70, 70, 80))
-local JumpBtn      = createBtn("قفز عالي (Jump): معطل ❌", UDim2.new(0.075, 0, 0.76, 0), Color3.fromRGB(70, 70, 80))
-local NoclipBtn    = createBtn("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.87, 0), Color3.fromRGB(70, 70, 80))
+local HitboxBtn    = createBtn("تكبير الهيت بوكس: معطل ❌", UDim2.new(0.075, 0, 0.19, 0), Color3.fromRGB(180, 50, 50))
+local FlyBtn       = createBtn("الطيران الحر (Fly): معطل ❌", UDim2.new(0.075, 0, 0.28, 0), Color3.fromRGB(180, 50, 50))
+local KillMurderer = createBtn("قتل القاتل فوراً ⚡", UDim2.new(0.075, 0, 0.37, 0), Color3.fromRGB(200, 30, 30))
+local KillSheriff  = createBtn("قتل الشريف فوراً ⚡", UDim2.new(0.075, 0, 0.46, 0), Color3.fromRGB(30, 100, 200))
+local TpToMurder   = createBtn("انتقال سريع للقاتل (TP)", UDim2.new(0.075, 0, 0.55, 0), Color3.fromRGB(140, 0, 180))
+local SpeedBtn     = createBtn("سرعة خارقة (Speed): معطل ❌", UDim2.new(0.075, 0, 0.64, 0), Color3.fromRGB(70, 70, 80))
+local JumpBtn      = createBtn("قفز عالي (Jump): معطل ❌", UDim2.new(0.075, 0, 0.73, 0), Color3.fromRGB(70, 70, 80))
+local NoclipBtn    = createBtn("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.82, 0), Color3.fromRGB(70, 70, 80))
 
--- زر عائم لإخفاء وإظهار القائمة
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
-ToggleBtn.Position = UDim2.new(0, 10, 0.4, 0)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.Text = "👁️"
-ToggleBtn.TextSize = 20
-ToggleBtn.Active = true
-ToggleBtn.Draggable = true
-ToggleBtn.Parent = ScreenGui
-
-local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(1, 0)
-ToggleCorner.Parent = ToggleBtn
-
-ToggleBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-end)
-
--- دالة مساعدة للبحث عن القاتل أو الشريف
 local function getPlayerByRole(targetRole)
     for _, p in pairs(Players:GetPlayers()) do
         if p ~= LocalPlayer and p.Character then
@@ -102,11 +115,8 @@ local function getPlayerByRole(targetRole)
             local hasKnife = char:FindFirstChild("Knife") or (backpack and backpack:FindFirstChild("Knife"))
             local hasGun = char:FindFirstChild("Gun") or (backpack and backpack:FindFirstChild("Gun"))
             
-            if targetRole == "Murderer" and hasKnife then
-                return p
-            elseif targetRole == "Sheriff" and hasGun then
-                return p
-            end
+            if targetRole == "Murderer" and hasKnife then return p
+            elseif targetRole == "Sheriff" and hasGun then return p end
         end
     end
     return nil
@@ -115,24 +125,16 @@ end
 -- 1. كشف الأدوار (ESP)
 ESPBtn.MouseButton1Click:Connect(function()
     ESPEnabled = not ESPEnabled
-    if ESPEnabled then
-        ESPBtn.Text = "كشف الأدوار (ESP): مفعل ✅"
-        ESPBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
-    else
-        ESPBtn.Text = "كشف الأدوار (ESP): معطل ❌"
-        ESPBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-    end
+    ESPBtn.Text = ESPEnabled and "كشف الأدوار (ESP): مفعل ✅" or "كشف الأدوار (ESP): معطل ❌"
+    ESPBtn.BackgroundColor3 = ESPEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(180, 50, 50)
 end)
 
 -- 2. تكبير الهيت بوكس
 HitboxBtn.MouseButton1Click:Connect(function()
     HitboxEnabled = not HitboxEnabled
-    if HitboxEnabled then
-        HitboxBtn.Text = "تكبير الهيت بوكس: مفعل ✅"
-        HitboxBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
-    else
-        HitboxBtn.Text = "تكبير الهيت بوكس: معطل ❌"
-        HitboxBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+    HitboxBtn.Text = HitboxEnabled and "تكبير الهيت بوكس: مفعل ✅" or "تكبير الهيت بوكس: معطل ❌"
+    HitboxBtn.BackgroundColor3 = HitboxEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(180, 50, 50)
+    if not HitboxEnabled then
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 p.Character.HumanoidRootPart.Size = Vector3.new(2, 2, 1)
@@ -142,36 +144,59 @@ HitboxBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 3. زر قتل القاتل فوراً
+-- 3. تفعيل الطيران الحر (Fly) المتحكم به بالكامل
+FlyBtn.MouseButton1Click:Connect(function()
+    FlyEnabled = not FlyEnabled
+    FlyBtn.Text = FlyEnabled and "الطيران الحر (Fly): مفعل ✅" or "الطيران الحر (Fly): معطل ❌"
+    FlyBtn.BackgroundColor3 = FlyEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(180, 50, 50)
+    
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        if FlyEnabled then
+            bv = Instance.new("BodyVelocity")
+            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bv.Velocity = Vector3.new(0, 0, 0)
+            bv.Parent = hrp
+
+            bg = Instance.new("BodyGyro")
+            bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bg.CFrame = hrp.CFrame
+            bg.Parent = hrp
+        else
+            if bv then bv:Destroy() end
+            if bg then bg:Destroy() end
+        end
+    end
+end)
+
+-- 4. قتل القاتل
 KillMurderer.MouseButton1Click:Connect(function()
     pcall(function()
         local murderer = getPlayerByRole("Murderer")
         if murderer and murderer.Character and murderer.Character:FindFirstChild("Humanoid") then
-            -- الانتقال الفوري إليه ثم قتله أو إلحاق الضرر به
             local hrp = LocalPlayer.Character.HumanoidRootPart
-            local mHrp = murderer.Character.HumanoidRootPart
-            hrp.CFrame = mHrp.CFrame * CFrame.new(0, 0, 2)
+            hrp.CFrame = murderer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
             task.wait(0.1)
             murderer.Character.Humanoid.Health = 0
         end
     end)
 end)
 
--- 4. زر قتل الشريف فوراً
+-- 5. قتل الشريف
 KillSheriff.MouseButton1Click:Connect(function()
     pcall(function()
         local sheriff = getPlayerByRole("Sheriff")
         if sheriff and sheriff.Character and sheriff.Character:FindFirstChild("Humanoid") then
             local hrp = LocalPlayer.Character.HumanoidRootPart
-            local sHrp = sheriff.Character.HumanoidRootPart
-            hrp.CFrame = sHrp.CFrame * CFrame.new(0, 0, 2)
+            hrp.CFrame = sheriff.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
             task.wait(0.1)
             sheriff.Character.Humanoid.Health = 0
         end
     end)
 end)
 
--- 5. زر الانتقال السريع لمكان القاتل
+-- 6. تليبروت للقاتل
 TpToMurder.MouseButton1Click:Connect(function()
     pcall(function()
         local murderer = getPlayerByRole("Murderer")
@@ -181,65 +206,38 @@ TpToMurder.MouseButton1Click:Connect(function()
     end)
 end)
 
--- 6. السرعة
+-- السرعة والقفز واختراق الجدران
 SpeedBtn.MouseButton1Click:Connect(function()
     SpeedEnabled = not SpeedEnabled
-    if SpeedEnabled then
-        SpeedBtn.Text = "سرعة خارقة (Speed): مفعل ✅"
-        SpeedBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
-    else
-        SpeedBtn.Text = "سرعة خارقة (Speed): معطل ❌"
-        SpeedBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = 16
-        end
-    end
+    SpeedBtn.Text = SpeedEnabled and "سرعة خارقة (Speed): مفعل ✅" or "سرعة خارقة (Speed): معطل ❌"
+    SpeedBtn.BackgroundColor3 = SpeedEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(70, 70, 80)
 end)
 
--- 7. القفز العالي
 JumpBtn.MouseButton1Click:Connect(function()
     JumpEnabled = not JumpEnabled
-    if JumpEnabled then
-        JumpBtn.Text = "قفز عالي (Jump): مفعل ✅"
-        JumpBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
-    else
-        JumpBtn.Text = "قفز عالي (Jump): معطل ❌"
-        JumpBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid") then
-            LocalPlayer.Character.Humanoid.JumpPower = 50
-        end
-    end
+    JumpBtn.Text = JumpEnabled and "قفز عالي (Jump): مفعل ✅" or "قفز عالي (Jump): معطل ❌"
+    JumpBtn.BackgroundColor3 = JumpEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(70, 70, 80)
 end)
 
--- 8. اختراق الجدران
 NoclipBtn.MouseButton1Click:Connect(function()
     NoclipEnabled = not NoclipEnabled
-    if NoclipEnabled then
-        NoclipBtn.Text = "اختراق الجدران (Noclip): مفعل ✅"
-        NoclipBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
-    else
-        NoclipBtn.Text = "اختراق الجدران (Noclip): معطل ❌"
-        NoclipBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
-    end
+    NoclipBtn.Text = NoclipEnabled and "اختراق الجدران (Noclip): مفعل ✅" or "اختراق الجدران (Noclip): معطل ❌"
+    NoclipBtn.BackgroundColor3 = NoclipEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(70, 70, 80)
 end)
 
--- حلقة التحديث المستمر
+-- التحديث المستمر
 RunService.RenderStepped:Connect(function()
-    -- ESP Logic
     if ESPEnabled then
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                 local backpack = p:FindFirstChild("Backpack")
                 local char = p.Character
-                local roleColor = Color3.fromRGB(0, 255, 0) -- أخضر للأبرياء
+                local roleColor = Color3.fromRGB(0, 255, 0)
                 local hasKnife = char:FindFirstChild("Knife") or (backpack and backpack:FindFirstChild("Knife"))
                 local hasGun = char:FindFirstChild("Gun") or (backpack and backpack:FindFirstChild("Gun"))
                 
-                if hasKnife then
-                    roleColor = Color3.fromRGB(255, 0, 0) -- أحمر للقاتل
-                elseif hasGun then
-                    roleColor = Color3.fromRGB(0, 150, 255) -- أزرق للشريف
-                end
+                if hasKnife then roleColor = Color3.fromRGB(255, 0, 0)
+                elseif hasGun then roleColor = Color3.fromRGB(0, 150, 255) end
 
                 local hl = char:FindFirstChild("MM2_HL")
                 if not hl then
@@ -254,13 +252,10 @@ RunService.RenderStepped:Connect(function()
         end
     else
         for _, p in pairs(Players:GetPlayers()) do
-            if p.Character and p.Character:FindFirstChild("MM2_HL") then
-                p.Character.MM2_HL:Destroy()
-            end
+            if p.Character and p.Character:FindFirstChild("MM2_HL") then p.Character.MM2_HL:Destroy() end
         end
     end
 
-    -- Hitbox Logic
     if HitboxEnabled then
         for _, p in pairs(Players:GetPlayers()) do
             if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
@@ -273,19 +268,30 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- Speed & Jump Logic
+    -- الطيران الحر الحقيقي (تحكم بالاتجاهات)
+    if FlyEnabled and bv and bg then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local camera = workspace.CurrentCamera
+            local moveDir = Vector3.new(0, 0, 0)
+            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + camera.CoordinateFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - camera.CoordinateFrame.LookVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - camera.CoordinateFrame.RightVector end
+            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + camera.CoordinateFrame.RightVector end
+            bv.Velocity = moveDir * flySpeed
+            bg.CFrame = camera.CoordinateFrame
+        end
+    end
+
     local char = LocalPlayer.Character
     if char and char:FindFirstChildOfClass("Humanoid") then
         if SpeedEnabled then char.Humanoid.WalkSpeed = 35 end
         if JumpEnabled then char.Humanoid.JumpPower = 120 end
     end
 
-    -- Noclip Logic
     if NoclipEnabled and char then
         for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = false
-            end
+            if part:IsA("BasePart") then part.CanCollide = false end
         end
     end
 end)
