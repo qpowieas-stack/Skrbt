@@ -1,10 +1,10 @@
--- MM2 Ultimate GUI (ESP, Hitbox, Fly, Kill, Toggle Button in Corner)
+-- MM2 Ultimate GUI (Fully Fixed Fly, Kill & Godmode)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
--- إزالة الواجهة القديمة إن وجدت
+-- تنظيف الواجهة القديمة
 if LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("MM2GodGui") then
     LocalPlayer.PlayerGui.MM2GodGui:Destroy()
 end
@@ -15,9 +15,10 @@ local FlyEnabled = false
 local SpeedEnabled = false
 local JumpEnabled = false
 local NoclipEnabled = false
+local GodmodeEnabled = false
 local HitboxSize = 15
 
-local flySpeed = 50
+local flySpeed = 45
 local bv, bg
 
 -- إنشاء الواجهة الرئيسية
@@ -28,8 +29,8 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 250, 0, 470)
-MainFrame.Position = UDim2.new(0.5, -125, 0.2, 0)
+MainFrame.Size = UDim2.new(0, 250, 0, 500)
+MainFrame.Position = UDim2.new(0.5, -125, 0.15, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
@@ -45,13 +46,13 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -45, 0, 40)
 Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "MM2 السكربت المطور 🔪🔥"
+Title.Text = "MM2 السكربت النهائي المصلح 🔪🔥"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 12
 Title.Font = Enum.Font.SourceSansBold
 Title.Parent = MainFrame
 
--- زر الإخفاء والإظهار في زاوية القائمة العليا
+-- زر الإخفاء والإظهار في الزاوية
 local CornerToggleBtn = Instance.new("TextButton")
 CornerToggleBtn.Size = UDim2.new(0, 35, 0, 35)
 CornerToggleBtn.Position = UDim2.new(1, -40, 0, 3)
@@ -71,14 +72,13 @@ CornerToggleBtn.MouseButton1Click:Connect(function()
             child.Visible = not child.Visible
         end
     end
-    if MainFrame.Size.Y.Offset == 470 then
+    if MainFrame.Size.Y.Offset == 500 then
         MainFrame.Size = UDim2.new(0, 250, 0, 45)
     else
-        MainFrame.Size = UDim2.new(0, 250, 0, 470)
+        MainFrame.Size = UDim2.new(0, 250, 0, 500)
     end
 end)
 
--- دالة لإنشاء الأزرار بسلاسة
 local function createBtn(text, pos, color)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(0.85, 0, 0, 32)
@@ -96,16 +96,17 @@ local function createBtn(text, pos, color)
     return btn
 end
 
--- الأزرار داخل القائمة
-local ESPBtn       = createBtn("كشف الأدوار (ESP): معطل ❌", UDim2.new(0.075, 0, 0.10, 0), Color3.fromRGB(180, 50, 50))
-local HitboxBtn    = createBtn("تكبير الهيت بوكس: معطل ❌", UDim2.new(0.075, 0, 0.19, 0), Color3.fromRGB(180, 50, 50))
-local FlyBtn       = createBtn("الطيران الحر (Fly): معطل ❌", UDim2.new(0.075, 0, 0.28, 0), Color3.fromRGB(180, 50, 50))
-local KillMurderer = createBtn("قتل القاتل فوراً ⚡", UDim2.new(0.075, 0, 0.37, 0), Color3.fromRGB(200, 30, 30))
-local KillSheriff  = createBtn("قتل الشريف فوراً ⚡", UDim2.new(0.075, 0, 0.46, 0), Color3.fromRGB(30, 100, 200))
-local TpToMurder   = createBtn("انتقال سريع للقاتل (TP)", UDim2.new(0.075, 0, 0.55, 0), Color3.fromRGB(140, 0, 180))
-local SpeedBtn     = createBtn("سرعة خارقة (Speed): معطل ❌", UDim2.new(0.075, 0, 0.64, 0), Color3.fromRGB(70, 70, 80))
+-- الأزرار
+local ESPBtn       = createBtn("كشف الأدوار (ESP): معطل ❌", UDim2.new(0.075, 0, 0.09, 0), Color3.fromRGB(180, 50, 50))
+local HitboxBtn    = createBtn("تكبير الهيت بوكس: معطل ❌", UDim2.new(0.075, 0, 0.17, 0), Color3.fromRGB(180, 50, 50))
+local GodmodeBtn   = createBtn("عدم الموت (Godmode): معطل ❌", UDim2.new(0.075, 0, 0.25, 0), Color3.fromRGB(180, 50, 50))
+local FlyBtn       = createBtn("طيران الجوال (Fly): معطل ❌", UDim2.new(0.075, 0, 0.33, 0), Color3.fromRGB(180, 50, 50))
+local KillMurderer = createBtn("قتل القاتل تلقائياً 🎯", UDim2.new(0.075, 0, 0.41, 0), Color3.fromRGB(200, 30, 30))
+local KillSheriff  = createBtn("قتل الشريف تلقائياً 🎯", UDim2.new(0.075, 0, 0.49, 0), Color3.fromRGB(30, 100, 200))
+local TpToMurder   = createBtn("انتقال سريع للقاتل (TP)", UDim2.new(0.075, 0, 0.57, 0), Color3.fromRGB(140, 0, 180))
+local SpeedBtn     = createBtn("سرعة خارقة (Speed): معطل ❌", UDim2.new(0.075, 0, 0.65, 0), Color3.fromRGB(70, 70, 80))
 local JumpBtn      = createBtn("قفز عالي (Jump): معطل ❌", UDim2.new(0.075, 0, 0.73, 0), Color3.fromRGB(70, 70, 80))
-local NoclipBtn    = createBtn("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.82, 0), Color3.fromRGB(70, 70, 80))
+local NoclipBtn    = createBtn("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.81, 0), Color3.fromRGB(70, 70, 80))
 
 local function getPlayerByRole(targetRole)
     for _, p in pairs(Players:GetPlayers()) do
@@ -122,14 +123,14 @@ local function getPlayerByRole(targetRole)
     return nil
 end
 
--- 1. كشف الأدوار (ESP)
+-- ESP
 ESPBtn.MouseButton1Click:Connect(function()
     ESPEnabled = not ESPEnabled
     ESPBtn.Text = ESPEnabled and "كشف الأدوار (ESP): مفعل ✅" or "كشف الأدوار (ESP): معطل ❌"
     ESPBtn.BackgroundColor3 = ESPEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(180, 50, 50)
 end)
 
--- 2. تكبير الهيت بوكس
+-- Hitbox
 HitboxBtn.MouseButton1Click:Connect(function()
     HitboxEnabled = not HitboxEnabled
     HitboxBtn.Text = HitboxEnabled and "تكبير الهيت بوكس: مفعل ✅" or "تكبير الهيت بوكس: معطل ❌"
@@ -144,15 +145,39 @@ HitboxBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 3. تفعيل الطيران الحر (Fly) المتحكم به بالكامل
+-- Godmode
+GodmodeBtn.MouseButton1Click:Connect(function()
+    GodmodeEnabled = not GodmodeEnabled
+    GodmodeBtn.Text = GodmodeEnabled and "عدم الموت (Godmode): مفعل ✅" or "عدم الموت (Godmode): معطل ❌"
+    GodmodeBtn.BackgroundColor3 = GodmodeEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(180, 50, 50)
+end)
+
+RunService.Stepped:Connect(function()
+    if GodmodeEnabled then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char then
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if hum then
+                    hum.Health = hum.MaxHealth
+                    hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                end
+            end
+        end)
+    end
+end)
+
+-- Fly المحسن للجوال
 FlyBtn.MouseButton1Click:Connect(function()
     FlyEnabled = not FlyEnabled
-    FlyBtn.Text = FlyEnabled and "الطيران الحر (Fly): مفعل ✅" or "الطيران الحر (Fly): معطل ❌"
+    FlyBtn.Text = FlyEnabled and "طيران الجوال (Fly): مفعل ✅" or "طيران الجوال (Fly): معطل ❌"
     FlyBtn.BackgroundColor3 = FlyEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(180, 50, 50)
     
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         local hrp = char.HumanoidRootPart
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        
         if FlyEnabled then
             bv = Instance.new("BodyVelocity")
             bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
@@ -170,33 +195,41 @@ FlyBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 4. قتل القاتل
+-- آلية القتل الخاطف المباشرة
+local function attackTarget(targetPlayer)
+    if not targetPlayer or not targetPlayer.Character then return end
+    local char = LocalPlayer.Character
+    local targetChar = targetPlayer.Character
+    if char and targetChar and char:FindFirstChild("HumanoidRootPart") and targetChar:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        local tHrp = targetChar.HumanoidRootPart
+        local oldCFrame = hrp.CFrame
+        
+        -- التجهيز بالسلاح
+        local tool = char:FindFirstChildOfClass("Tool") or LocalPlayer.Backpack:FindFirstChildOfClass("Tool")
+        if tool then 
+            tool.Parent = char 
+        end
+        
+        -- الانتقال المباشر خلف ظهر اللاعب واستخدام السلاح
+        hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 1.2)
+        task.wait(0.08)
+        if tool then 
+            tool:Activate() 
+        end
+        task.wait(0.1)
+        hrp.CFrame = oldCFrame
+    end
+end
+
 KillMurderer.MouseButton1Click:Connect(function()
-    pcall(function()
-        local murderer = getPlayerByRole("Murderer")
-        if murderer and murderer.Character and murderer.Character:FindFirstChild("Humanoid") then
-            local hrp = LocalPlayer.Character.HumanoidRootPart
-            hrp.CFrame = murderer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
-            task.wait(0.1)
-            murderer.Character.Humanoid.Health = 0
-        end
-    end)
+    pcall(function() attackTarget(getPlayerByRole("Murderer")) end)
 end)
 
--- 5. قتل الشريف
 KillSheriff.MouseButton1Click:Connect(function()
-    pcall(function()
-        local sheriff = getPlayerByRole("Sheriff")
-        if sheriff and sheriff.Character and sheriff.Character:FindFirstChild("Humanoid") then
-            local hrp = LocalPlayer.Character.HumanoidRootPart
-            hrp.CFrame = sheriff.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2)
-            task.wait(0.1)
-            sheriff.Character.Humanoid.Health = 0
-        end
-    end)
+    pcall(function() attackTarget(getPlayerByRole("Sheriff")) end)
 end)
 
--- 6. تليبروت للقاتل
 TpToMurder.MouseButton1Click:Connect(function()
     pcall(function()
         local murderer = getPlayerByRole("Murderer")
@@ -206,7 +239,7 @@ TpToMurder.MouseButton1Click:Connect(function()
     end)
 end)
 
--- السرعة والقفز واختراق الجدران
+-- Speed, Jump & Noclip
 SpeedBtn.MouseButton1Click:Connect(function()
     SpeedEnabled = not SpeedEnabled
     SpeedBtn.Text = SpeedEnabled and "سرعة خارقة (Speed): مفعل ✅" or "سرعة خارقة (Speed): معطل ❌"
@@ -225,7 +258,7 @@ NoclipBtn.MouseButton1Click:Connect(function()
     NoclipBtn.BackgroundColor3 = NoclipEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(70, 70, 80)
 end)
 
--- التحديث المستمر
+-- التحديث المستمر للأداء والدفع للطيران
 RunService.RenderStepped:Connect(function()
     if ESPEnabled then
         for _, p in pairs(Players:GetPlayers()) do
@@ -268,17 +301,19 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- الطيران الحر الحقيقي (تحكم بالاتجاهات)
+    -- تحريك الطيران بسلاسة حسب الحركة
     if FlyEnabled and bv and bg then
         local char = LocalPlayer.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if char and char:FindFirstChild("HumanoidRootPart") and hum then
             local camera = workspace.CurrentCamera
-            local moveDir = Vector3.new(0, 0, 0)
-            if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDir = moveDir + camera.CoordinateFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDir = moveDir - camera.CoordinateFrame.LookVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDir = moveDir - camera.CoordinateFrame.RightVector end
-            if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDir = moveDir + camera.CoordinateFrame.RightVector end
-            bv.Velocity = moveDir * flySpeed
+            local moveDir = hum.MoveDirection
+            
+            if moveDir.Magnitude > 0 then
+                bv.Velocity = moveDir * flySpeed + Vector3.new(0, camera.CoordinateFrame.LookVector.Y * flySpeed * 0.5, 0)
+            else
+                bv.Velocity = Vector3.new(0, 0, 0)
+            end
             bg.CFrame = camera.CoordinateFrame
         end
     end
