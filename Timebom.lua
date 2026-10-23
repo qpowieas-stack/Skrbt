@@ -59,14 +59,16 @@ MiniBtn.Font = Enum.Font.SourceSansBold
 MiniBtn.TextSize = 20
 Instance.new("UICorner", MiniBtn).CornerRadius = UDim.new(0, 6)
 
--- Open Button (Small Floating Button in Screen Corner)
+-- Open Button (Small Floating Button in Screen Corner with '-')
 local OpenBtn = Instance.new("TextButton", ScreenGui)
 OpenBtn.Name = "OpenBtn"
-OpenBtn.Size = UDim2.new(0, 35, 0, 35)
-OpenBtn.Position = UDim2.new(0, 15, 0, 15) -- أعلى اليسار
-OpenBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-OpenBtn.Text = "💣"
-OpenBtn.TextSize = 20
+OpenBtn.Size = UDim2.new(0, 40, 0, 40)
+OpenBtn.Position = UDim2.new(0, 15, 0, 15) -- زاوية الشاشة
+OpenBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+OpenBtn.Text = "-"
+OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+OpenBtn.Font = Enum.Font.SourceSansBold
+OpenBtn.TextSize = 22
 OpenBtn.Visible = false
 OpenBtn.Active = true
 OpenBtn.Draggable = true -- إمكانية تحريك زر الإظهار أيضاً
