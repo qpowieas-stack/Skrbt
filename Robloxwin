@@ -1,4 +1,4 @@
--- Keyboard Simulator (Target Highest Wins: 150K / 200M / 1T)
+-- Keyboard Simulator (Fixed Godmode + Auto Win Highest Stage)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
@@ -9,13 +9,12 @@ if LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("KeyboardFarmGui") then
     LocalPlayer.PlayerGui.KeyboardFarmGui:Destroy()
 end
 
--- المتغيرات
 local AutoWinEnabled = false
 local InfJumpEnabled = false
 local NoclipEnabled = false
 local GodmodeEnabled = false
 
--- إنشاء الواجهة الرئيسية
+-- إنشاء الواجهة
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KeyboardFarmGui"
 ScreenGui.ResetOnSpawn = false
@@ -35,11 +34,10 @@ local MainCorner = Instance.new("UICorner")
 MainCorner.CornerRadius = UDim.new(0, 10)
 MainCorner.Parent = MainFrame
 
--- عنوان القائمة
 local TitleLabel = Instance.new("TextLabel")
 TitleLabel.Size = UDim2.new(1, 0, 0, 40)
 TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "تجميع أخير المراحل (150K / 200M / 1T) 🏆"
+TitleLabel.Text = "سكربت الكيبورد الشامل (حماية مؤكدة) ⌨️🔥"
 TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.TextSize = 12
 TitleLabel.Font = Enum.Font.SourceSansBold
@@ -62,14 +60,13 @@ local function createButton(text, pos, color)
     return btn
 end
 
--- الأزرار
-local AutoWinBtn  = createButton("تجميع الكؤوس القصوى: معطل ❌", UDim2.new(0.075, 0, 0.13, 0), Color3.fromRGB(180, 50, 50))
+local AutoWinBtn  = createButton("تجميع أقصى فوز: معطل ❌", UDim2.new(0.075, 0, 0.13, 0), Color3.fromRGB(180, 50, 50))
 local Speed300Btn = createButton("تفعيل سرعة 300 ⚡", UDim2.new(0.075, 0, 0.30, 0), Color3.fromRGB(0, 140, 255))
 local GodmodeBtn  = createButton("عدم الموت (Godmode): معطل ❌", UDim2.new(0.075, 0, 0.47, 0), Color3.fromRGB(180, 50, 50))
 local InfJumpBtn  = createButton("القفز اللانهائي: معطل ❌", UDim2.new(0.075, 0, 0.64, 0), Color3.fromRGB(180, 50, 50))
 local NoclipBtn   = createButton("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.81, 0), Color3.fromRGB(180, 50, 50))
 
--- زر تصغير وإخفاء القائمة
+-- زر تصغير القائمة
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Size = UDim2.new(0, 45, 0, 45)
 ToggleBtn.Position = UDim2.new(0, 10, 0.4, 0)
@@ -89,14 +86,14 @@ ToggleBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = not MainFrame.Visible
 end)
 
--- 1. خوارزمية البحث واللمس لأكبر نقطة فوز (الـ Win الأخير فقط)
+-- 1. تجميع الفوز أوتوماتيكياً
 AutoWinBtn.MouseButton1Click:Connect(function()
     AutoWinEnabled = not AutoWinEnabled
     if AutoWinEnabled then
-        AutoWinBtn.Text = "تجميع الكؤوس القصوى: مفعل ✅"
+        AutoWinBtn.Text = "تجميع أقصى فوز: مفعل ✅"
         AutoWinBtn.BackgroundColor3 = Color3.fromRGB(40, 180, 80)
     else
-        AutoWinBtn.Text = "تجميع الكؤوس القصوى: معطل ❌"
+        AutoWinBtn.Text = "تجميع أقصى فوز: معطل ❌"
         AutoWinBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
     end
 end)
@@ -109,35 +106,32 @@ task.spawn(function()
                 if char and char:FindFirstChild("HumanoidRootPart") then
                     local hrp = char.HumanoidRootPart
 
-                    -- تجميع كل نقاط الفوز المتاحة مرتبة من الأبعد/الأعلى
-                    local winParts = {}
-                    for _, obj in pairs(workspace:GetDescendants()) do
-                        if obj:IsA("TouchTransmitter") or obj.Name == "TouchInterest" then
-                            local parent = obj.Parent
-                            if parent and (parent.Name:lower():find("win") or parent.Name:lower():find("end") or parent.Name:lower():find("trophy") or parent.Name:lower():find("finish")) then
-                                table.insert(winParts, parent)
+                    local bestWinPart = nil
+                    local maxDistance = -1
+
+                    for _, v in pairs(workspace:GetDescendants()) do
+                        if v:IsA("BasePart") and (v.Name:lower():find("win") or v.Name:lower():find("finish") or v.Name:lower():find("end")) then
+                            local dist = (v.Position - Vector3.new(0,0,0)).Magnitude
+                            if dist > maxDistance then
+                                maxDistance = dist
+                                bestWinPart = v
                             end
                         end
                     end
 
-                    -- تفاعل مع أطراف ونهايات المراحل (تحديداً الأخير في القائمة لتجاوز المراحل الأولى)
-                    if #winParts > 0 then
-                        for i = #winParts, 1, -1 do
-                            local targetPart = winParts[i]
-                            if targetPart and targetPart:IsA("BasePart") then
-                                firetouchinterest(hrp, targetPart, 0)
-                                firetouchinterest(hrp, targetPart, 1)
-                            end
-                        end
+                    if bestWinPart then
+                        hrp.CFrame = bestWinPart.CFrame + Vector3.new(0, 3, 0)
+                        firetouchinterest(hrp, bestWinPart, 0)
+                        firetouchinterest(hrp, bestWinPart, 1)
                     end
                 end
             end)
         end
-        task.wait(0.3)
+        task.wait(0.2)
     end
 end)
 
--- 2. زر سرعة 300
+-- 2. سرعة 300
 Speed300Btn.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChildOfClass("Humanoid") then
@@ -148,7 +142,7 @@ Speed300Btn.MouseButton1Click:Connect(function()
     end
 end)
 
--- 3. عدم الموت
+-- 3. عدم الموت المطور المباشر (Godmode Fix)
 GodmodeBtn.MouseButton1Click:Connect(function()
     GodmodeEnabled = not GodmodeEnabled
     if GodmodeEnabled then
@@ -169,6 +163,17 @@ RunService.Stepped:Connect(function()
                 if hum then
                     hum.Health = hum.MaxHealth
                     hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                end
+
+                -- إلغاء تأثير أجزاء القتل (Kill / Lava Parts)
+                for _, part in pairs(char:GetChildren()) do
+                    if part:IsA("BasePart") then
+                        part.Touched:Connect(function(hit)
+                            if GodmodeEnabled and hit and (hit.Name:lower():find("kill") or hit.Name:lower():find("lava") or hit.Name:lower():find("death")) then
+                                hum.Health = hum.MaxHealth
+                            end
+                        end)
+                    end
                 end
             end
         end)
@@ -199,7 +204,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- 5. Noclip
+-- 5. اختراق الجدران (Noclip)
 NoclipBtn.MouseButton1Click:Connect(function()
     NoclipEnabled = not NoclipEnabled
     if NoclipEnabled then
