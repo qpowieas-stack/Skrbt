@@ -1,4 +1,4 @@
--- MM2 Ultimate GUI (Fully Fixed Fly, Kill & Godmode)
+-- MM2 Ultimate GUI (Unified Target Kill System)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -29,7 +29,7 @@ ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 250, 0, 500)
+MainFrame.Size = UDim2.new(0, 250, 0, 460)
 MainFrame.Position = UDim2.new(0.5, -125, 0.15, 0)
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BorderSizePixel = 0
@@ -46,7 +46,7 @@ local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, -45, 0, 40)
 Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundTransparency = 1
-Title.Text = "MM2 السكربت النهائي المصلح 🔪🔥"
+Title.Text = "MM2 السكربت النهائي المطور 🔪⚡"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 12
 Title.Font = Enum.Font.SourceSansBold
@@ -72,10 +72,10 @@ CornerToggleBtn.MouseButton1Click:Connect(function()
             child.Visible = not child.Visible
         end
     end
-    if MainFrame.Size.Y.Offset == 500 then
+    if MainFrame.Size.Y.Offset == 460 then
         MainFrame.Size = UDim2.new(0, 250, 0, 45)
     else
-        MainFrame.Size = UDim2.new(0, 250, 0, 500)
+        MainFrame.Size = UDim2.new(0, 250, 0, 460)
     end
 end)
 
@@ -97,16 +97,15 @@ local function createBtn(text, pos, color)
 end
 
 -- الأزرار
-local ESPBtn       = createBtn("كشف الأدوار (ESP): معطل ❌", UDim2.new(0.075, 0, 0.09, 0), Color3.fromRGB(180, 50, 50))
-local HitboxBtn    = createBtn("تكبير الهيت بوكس: معطل ❌", UDim2.new(0.075, 0, 0.17, 0), Color3.fromRGB(180, 50, 50))
-local GodmodeBtn   = createBtn("عدم الموت (Godmode): معطل ❌", UDim2.new(0.075, 0, 0.25, 0), Color3.fromRGB(180, 50, 50))
-local FlyBtn       = createBtn("طيران الجوال (Fly): معطل ❌", UDim2.new(0.075, 0, 0.33, 0), Color3.fromRGB(180, 50, 50))
-local KillMurderer = createBtn("قتل القاتل تلقائياً 🎯", UDim2.new(0.075, 0, 0.41, 0), Color3.fromRGB(200, 30, 30))
-local KillSheriff  = createBtn("قتل الشريف تلقائياً 🎯", UDim2.new(0.075, 0, 0.49, 0), Color3.fromRGB(30, 100, 200))
-local TpToMurder   = createBtn("انتقال سريع للقاتل (TP)", UDim2.new(0.075, 0, 0.57, 0), Color3.fromRGB(140, 0, 180))
-local SpeedBtn     = createBtn("سرعة خارقة (Speed): معطل ❌", UDim2.new(0.075, 0, 0.65, 0), Color3.fromRGB(70, 70, 80))
+local ESPBtn       = createBtn("كشف الأدوار (ESP): معطل ❌", UDim2.new(0.075, 0, 0.10, 0), Color3.fromRGB(180, 50, 50))
+local HitboxBtn    = createBtn("تكبير الهيت بوكس: معطل ❌", UDim2.new(0.075, 0, 0.19, 0), Color3.fromRGB(180, 50, 50))
+local GodmodeBtn   = createBtn("عدم الموت (Godmode): معطل ❌", UDim2.new(0.075, 0, 0.28, 0), Color3.fromRGB(180, 50, 50))
+local FlyBtn       = createBtn("طيران الجوال (Fly): معطل ❌", UDim2.new(0.075, 0, 0.37, 0), Color3.fromRGB(180, 50, 50))
+local KillMurderer = createBtn("قتل القاتل 🎯 (Kill Murderer)", UDim2.new(0.075, 0, 0.46, 0), Color3.fromRGB(200, 30, 30))
+local KillSheriff  = createBtn("قتل الشريف 🎯 (Kill Sheriff)", UDim2.new(0.075, 0, 0.55, 0), Color3.fromRGB(30, 100, 200))
+local SpeedBtn     = createBtn("سرعة خارقة (Speed): معطل ❌", UDim2.new(0.075, 0, 0.64, 0), Color3.fromRGB(70, 70, 80))
 local JumpBtn      = createBtn("قفز عالي (Jump): معطل ❌", UDim2.new(0.075, 0, 0.73, 0), Color3.fromRGB(70, 70, 80))
-local NoclipBtn    = createBtn("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.81, 0), Color3.fromRGB(70, 70, 80))
+local NoclipBtn    = createBtn("اختراق الجدران (Noclip): معطل ❌", UDim2.new(0.075, 0, 0.82, 0), Color3.fromRGB(70, 70, 80))
 
 local function getPlayerByRole(targetRole)
     for _, p in pairs(Players:GetPlayers()) do
@@ -161,13 +160,14 @@ RunService.Stepped:Connect(function()
                 if hum then
                     hum.Health = hum.MaxHealth
                     hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+                    hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
                 end
             end
         end)
     end
 end)
 
--- Fly المحسن للجوال
+-- Fly
 FlyBtn.MouseButton1Click:Connect(function()
     FlyEnabled = not FlyEnabled
     FlyBtn.Text = FlyEnabled and "طيران الجوال (Fly): مفعل ✅" or "طيران الجوال (Fly): معطل ❌"
@@ -176,8 +176,6 @@ FlyBtn.MouseButton1Click:Connect(function()
     local char = LocalPlayer.Character
     if char and char:FindFirstChild("HumanoidRootPart") then
         local hrp = char.HumanoidRootPart
-        local hum = char:FindFirstChildOfClass("Humanoid")
-        
         if FlyEnabled then
             bv = Instance.new("BodyVelocity")
             bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
@@ -195,8 +193,8 @@ FlyBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- آلية القتل الخاطف المباشرة
-local function attackTarget(targetPlayer)
+-- دالة القتل بالضرب السريع وطرد الهدف لضمان الموت
+local function eliminateTarget(targetPlayer)
     if not targetPlayer or not targetPlayer.Character then return end
     local char = LocalPlayer.Character
     local targetChar = targetPlayer.Character
@@ -205,38 +203,34 @@ local function attackTarget(targetPlayer)
         local tHrp = targetChar.HumanoidRootPart
         local oldCFrame = hrp.CFrame
         
-        -- التجهيز بالسلاح
+        -- التجهيز بالسلاح إن وجد
         local tool = char:FindFirstChildOfClass("Tool") or LocalPlayer.Backpack:FindFirstChildOfClass("Tool")
-        if tool then 
-            tool.Parent = char 
-        end
-        
-        -- الانتقال المباشر خلف ظهر اللاعب واستخدام السلاح
-        hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 1.2)
-        task.wait(0.08)
-        if tool then 
-            tool:Activate() 
-        end
-        task.wait(0.1)
-        hrp.CFrame = oldCFrame
+        if tool then tool.Parent = char end
+
+        -- الهجوم المباشر وسحب الهدف لمنطقة الموت (Void)
+        pcall(function()
+            hrp.CFrame = tHrp.CFrame * CFrame.new(0, 0, 1)
+            if tool then tool:Activate() end
+            task.wait(0.05)
+            
+            -- طرده لخارج الماب ليتم التأكد من موته
+            local voidPos = CFrame.new(0, -900, 0)
+            tHrp.CFrame = voidPos
+            hrp.CFrame = voidPos
+            task.wait(0.1)
+            
+            -- العودة الفورية لموقعك الأصلي
+            hrp.CFrame = oldCFrame
+        end)
     end
 end
 
 KillMurderer.MouseButton1Click:Connect(function()
-    pcall(function() attackTarget(getPlayerByRole("Murderer")) end)
+    pcall(function() eliminateTarget(getPlayerByRole("Murderer")) end)
 end)
 
 KillSheriff.MouseButton1Click:Connect(function()
-    pcall(function() attackTarget(getPlayerByRole("Sheriff")) end)
-end)
-
-TpToMurder.MouseButton1Click:Connect(function()
-    pcall(function()
-        local murderer = getPlayerByRole("Murderer")
-        if murderer and murderer.Character and murderer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = murderer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
-        end
-    end)
+    pcall(function() eliminateTarget(getPlayerByRole("Sheriff")) end)
 end)
 
 -- Speed, Jump & Noclip
@@ -254,11 +248,11 @@ end)
 
 NoclipBtn.MouseButton1Click:Connect(function()
     NoclipEnabled = not NoclipEnabled
-    NoclipBtn.Text = NoclipEnabled and "اختراق الجدران (Noclip): مفعل ✅" or "اختراق الجدران (Noclip): معطل ❌"
+    NoclipBtn.Text = NoclipEnabled and "اختراق الجدران (Noclip): معطل ❌" or "اختراق الجدران (Noclip): مفعل ✅"
     NoclipBtn.BackgroundColor3 = NoclipEnabled and Color3.fromRGB(40, 180, 80) or Color3.fromRGB(70, 70, 80)
 end)
 
--- التحديث المستمر للأداء والدفع للطيران
+-- التحديث المستمر
 RunService.RenderStepped:Connect(function()
     if ESPEnabled then
         for _, p in pairs(Players:GetPlayers()) do
@@ -301,7 +295,6 @@ RunService.RenderStepped:Connect(function()
         end
     end
 
-    -- تحريك الطيران بسلاسة حسب الحركة
     if FlyEnabled and bv and bg then
         local char = LocalPlayer.Character
         local hum = char and char:FindFirstChildOfClass("Humanoid")
